@@ -1,0 +1,13 @@
+{
+  "name": "leikki-info",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "update": "node scripts/update-activities.mjs",
+    "test": "node --test scripts/*.test.mjs",
+    "serve": "http-server . -p 4173 -c-1"
+  },
+  "dependencies": { "html-to-text": "^9.0.5" },
+  "devDependencies": { "http-server": "^14.1.1" }
+}

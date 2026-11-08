@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#232b28">
+  <meta name="description" content="Family activities for ages 0-8 in Espoo, Helsinki and Vantaa, from today through next week.">
+  <title>Leikki | Kids’ activities</title>
+  <script>
+    try { const t = localStorage.getItem('leikki-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --paper:#232b28; --surface:#2c3632; --raised:#36423d; --line:#46534d; --field:#2f3a35;
+      --ink:#eaf1ed; --muted:#aebcb5; --green:#94dbbb; --tint:#2f4a3e; --coral:#f2a78a;
+      --accent:#2f8460; --on-accent:#fff; --star:#f4c463; --star-off:#56635c;
+      --shadow:0 1px 2px #0003, 0 4px 14px #0002; --warn-bg:#4a3a2f; --warn-ink:#f8d8c6;
+    }
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --paper:#f5f7f5; --surface:#ffffff; --raised:#eef2ef; --line:#dbe2de; --field:#ffffff;
+      --ink:#1f2b27; --muted:#5a6762; --green:#17745b; --tint:#e5f2ec; --coral:#b94935;
+      --accent:#17745b; --on-accent:#fff; --star:#e2a40b; --star-off:#d4dbd7;
+      --shadow:0 1px 2px #1f2b2712, 0 4px 14px #1f2b270d; --warn-bg:#fff1e8; --warn-ink:#843623;
+    }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:'DM Sans',system-ui,sans-serif; font-size:15px; line-height:1.5; }
+    button,input,select { font:inherit; color:inherit; }
+    button,select { cursor:pointer; }
+    button,a,input,select { -webkit-tap-highlight-color:transparent; }
+    a { color:var(--green); text-underline-offset:3px; }
+    :focus-visible { outline:3px solid var(--coral); outline-offset:2px; }
+    [hidden] { display:none !important; }
+    .wrap { width:min(1180px, 100% - 40px); margin:auto; }
+    .skip { position:absolute; left:16px; top:-70px; background:var(--surface); padding:10px; z-index:20; }
+    .skip:focus { top:10px; }
+    .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+    /* Header */
+    header { background:var(--surface); border-bottom:1px solid var(--line); }
+    .top { display:flex; justify-content:space-between; align-items:center; min-height:68px; gap:16px; }
+    .brand { font-family:'Fraunces',serif; font-size:30px; line-height:1; color:var(--green); text-decoration:none; display:flex; align-items:baseline; gap:10px; }
+    .brand small { font-family:'DM Sans',sans-serif; font-size:11px; letter-spacing:.06em; color:var(--muted); }
+    .header-controls { display:flex; gap:8px; align-items:center; }
+    .lang { position:relative; display:flex; align-items:center; }
+    .lang svg { position:absolute; left:10px; pointer-events:none; color:var(--muted); }
+    .lang select { appearance:none; background:var(--raised); border:1px solid var(--line); border-radius:999px; padding:7px 30px 7px 32px; min-height:40px; font-size:14px; font-weight:600; }
+    .lang::after { content:''; position:absolute; right:13px; width:6px; height:6px; border-right:2px solid var(--muted); border-bottom:2px solid var(--muted); transform:translateY(-2px) rotate(45deg); pointer-events:none; }
+    .icon-btn { width:40px; height:40px; display:grid; place-items:center; border-radius:999px; border:1px solid var(--line); background:var(--raised); color:var(--ink); padding:0; }
+    .icon-btn:hover, .lang select:hover { border-color:var(--green); }
+    .icon-sun { display:none; } :root[data-theme="dark"] .icon-sun { display:block; } :root[data-theme="dark"] .icon-moon { display:none; }
+
+    /* Intro */
+    .intro { padding:22px 0 18px; background:linear-gradient(110deg,var(--tint),var(--paper) 70%); }
+    h1 { font-family:'Fraunces',serif; font-weight:500; font-size:32px; line-height:1.2; margin:0 0 4px; }
+    .range { margin:0; color:var(--muted); }
+    .status { font-size:12px; color:var(--muted); margin-top:6px; }
+    .warning { color:var(--warn-ink); background:var(--warn-bg); border-left:3px solid var(--coral); padding:10px 14px; margin-top:14px; border-radius:4px; font-size:13px; }
+
+    /* Sticky toolbar: days + filters + categories */
+    .toolbar { position:sticky; top:0; z-index:10; background:var(--surface); border-top:1px solid var(--line); border-bottom:1px solid var(--line); transition:box-shadow .2s; }
+    .toolbar.stuck { box-shadow:0 6px 18px #0000002a; }
+    .days { position:relative; display:flex; gap:6px; overflow-x:auto; padding:10px 0 8px; scrollbar-width:none; }
+    .days::-webkit-scrollbar { display:none; }
+    .day-tab { flex:1 0 74px; display:flex; flex-direction:column; align-items:center; gap:1px; padding:6px 4px 7px; border-radius:10px; border:1px solid transparent; background:transparent; color:var(--muted); font-size:12px; position:relative; }
+    .day-tab:hover { background:var(--raised); }
+    .day-tab strong { font-size:19px; line-height:1.2; color:var(--ink); font-variant-numeric:tabular-nums; }
+    .day-tab .count { font-size:11px; font-weight:700; color:var(--green); min-height:16px; }
+    .day-tab.empty-day .count { color:var(--muted); font-weight:500; opacity:.7; }
+    .day-tab[aria-selected="true"] { background:var(--accent); border-color:var(--accent); color:#ffffffd9; }
+    .day-tab[aria-selected="true"] strong, .day-tab[aria-selected="true"] .count { color:var(--on-accent); }
+    .day-tab .today { font-weight:700; }
+    .week-divider { flex:0 0 auto; align-self:stretch; display:flex; align-items:center; padding:0 2px; }
+    .week-divider span { writing-mode:vertical-rl; transform:rotate(180deg); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); border-left:1px solid var(--line); padding-left:6px; }
+
+    .filters { display:flex; gap:8px; align-items:center; padding:2px 0 8px; }
+    .search { flex:1 1 220px; position:relative; display:flex; align-items:center; }
+    .search svg { position:absolute; left:11px; color:var(--muted); pointer-events:none; }
+    .field { background:var(--field); border:1px solid var(--line); border-radius:8px; padding:8px 10px; min-height:40px; color:var(--ink); max-width:100%; font-size:14px; }
+    .field:hover { border-color:var(--muted); }
+    .search .field { width:100%; padding-left:34px; }
+    .selects { display:flex; gap:8px; flex:0 1 auto; }
+    .selects select { flex:1 1 auto; min-width:0; }
+    .filter-toggle { display:none; align-items:center; gap:6px; background:var(--field); border:1px solid var(--line); border-radius:8px; padding:8px 12px; min-height:40px; font-size:14px; font-weight:600; white-space:nowrap; }
+    .filter-toggle .badge { background:var(--accent); color:var(--on-accent); border-radius:999px; font-size:11px; min-width:18px; height:18px; display:inline-grid; place-items:center; padding:0 5px; }
+    .chips { display:flex; gap:6px; overflow-x:auto; padding:0 0 10px; scrollbar-width:none; }
+    .chips::-webkit-scrollbar { display:none; }
+    .chips button { flex:0 0 auto; border:1px solid var(--line); background:transparent; color:var(--muted); border-radius:999px; padding:6px 14px; min-height:36px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; }
+    .chips button:hover { border-color:var(--green); color:var(--ink); }
+    .chips button[aria-pressed="true"] { background:var(--tint); border-color:var(--green); color:var(--green); }
+    .reset { margin-left:auto; border:0 !important; color:var(--green) !important; text-decoration:underline; text-underline-offset:3px; }
+
+    /* Day results */
+    main { padding-bottom:40px; }
+    .day-heading { display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; padding:22px 0 14px; }
+    h2 { font-family:'Fraunces',serif; font-weight:500; font-size:26px; margin:0; }
+    .day-heading .meta { font-size:13px; color:var(--muted); }
+    .cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; align-items:start; }
+    .card { background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden; min-width:0; box-shadow:var(--shadow); animation:arrive .25s ease-out both; transition:border-color .15s, transform .15s; }
+    .card:hover { border-color:var(--green); }
+    .photo { width:100%; aspect-ratio:16/7; object-fit:cover; display:block; }
+    .credit { font-size:10px; color:var(--muted); padding:3px 14px 0; margin:0; }
+    .card-body { padding:16px 18px 14px; }
+    .card-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .time { font-size:16px; font-weight:700; font-variant-numeric:tabular-nums; }
+    .time small { font-weight:500; color:var(--muted); font-size:12px; margin-left:4px; }
+    .stars { position:relative; display:inline-block; font-size:16px; line-height:1; letter-spacing:1px; color:var(--star-off); white-space:nowrap; }
+    .stars span { position:absolute; inset:0 auto 0 0; overflow:hidden; color:var(--star); }
+    h3 { font-size:17px; line-height:1.35; margin:10px 0 6px; overflow-wrap:anywhere; }
+    .orig-note { font-size:11px; color:var(--muted); display:block; margin:-4px 0 6px; }
+    .venue { margin:0; font-weight:600; font-size:13px; }
+    .address { font-size:12px; color:var(--muted); margin:2px 0 0; overflow-wrap:anywhere; }
+    .tags { display:flex; flex-wrap:wrap; gap:5px; margin:12px 0; }
+    .tag { font-size:11px; border:1px solid var(--line); padding:2px 8px; border-radius:999px; color:var(--muted); }
+    .tag.free { background:var(--tint); color:var(--green); border-color:transparent; font-weight:700; }
+    .tag.caution { color:var(--coral); }
+    .tag.paid { background:var(--raised); color:var(--ink); border-color:transparent; font-weight:700; }
+    .tag.city { color:var(--ink); }
+    .dir-group h4 { margin:18px 0 0; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+    details { font-size:12px; color:var(--muted); }
+    details + details { margin-top:6px; }
+    summary { cursor:pointer; font-weight:600; }
+    summary:hover { color:var(--ink); }
+    details p { white-space:pre-line; overflow-wrap:anywhere; max-height:230px; overflow:auto; margin:8px 0; }
+    details ul { padding-left:18px; margin:8px 0; }
+    .card-footer { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-top:1px solid var(--line); margin-top:14px; padding-top:12px; font-size:13px; }
+    .original { font-weight:700; }
+    .empty { color:var(--muted); padding:28px 0; margin:0; font-size:14px; text-align:center; }
+    .empty button { display:block; margin:12px auto 0; }
+    .pager { display:flex; justify-content:space-between; gap:10px; margin-top:24px; }
+    .btn { background:var(--surface); border:1px solid var(--line); color:var(--green); border-radius:8px; padding:9px 14px; min-height:42px; font-weight:600; }
+    .btn:hover { border-color:var(--green); }
+    .btn.primary { background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
+    .notice { color:var(--muted); font-size:12px; margin:28px 0 0; }
+    .directory { padding:22px 0 0; border-top:1px solid var(--line); margin-top:24px; }
+    .directory > summary { font-family:'Fraunces',serif; color:var(--ink); font-size:20px; font-weight:500; }
+    .directory > p { color:var(--muted); font-size:13px; }
+    .source-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0 24px; }
+    .source-item { border-bottom:1px solid var(--line); padding:14px 0; min-width:0; }
+    .source-item a { font-weight:600; font-size:14px; }
+    .source-item small { display:block; color:var(--muted); font-size:12px; margin-top:4px; }
+    footer { border-top:1px solid var(--line); padding:20px 0 30px; color:var(--muted); font-size:12px; background:var(--surface); }
+    footer .wrap { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    .error { padding:35px 0; text-align:center; }
+
+    /* Floating back-to-top */
+    .back-top { position:fixed; right:20px; bottom:20px; z-index:15; width:48px; height:48px; border-radius:999px; border:0; background:var(--accent); color:var(--on-accent); display:grid; place-items:center; box-shadow:0 4px 16px #0004; opacity:0; transform:translateY(12px); pointer-events:none; transition:opacity .2s, transform .2s; }
+    .back-top.show { opacity:1; transform:none; pointer-events:auto; }
+    .back-top:hover { filter:brightness(1.1); }
+
+    @keyframes arrive { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+    @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .card { animation:none; } .back-top,.toolbar { transition:none; } }
+    @media (max-width:960px) {
+      .cards,.source-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .filters { flex-wrap:wrap; }
+      .filter-toggle { display:flex; }
+      .selects { display:none; flex-basis:100%; flex-wrap:wrap; }
+      .selects.open { display:flex; }
+      .selects select { flex:1 1 calc(50% - 8px); }
+    }
+    @media (max-width:600px) {
+      .wrap { width:calc(100% - 32px); }
+      .top { min-height:60px; }
+      .brand { font-size:26px; }
+      .brand small { display:none; }
+      h1 { font-size:26px; }
+      .intro { padding:16px 0 14px; }
+      .cards,.source-grid { grid-template-columns:minmax(0,1fr); }
+      .day-tab { flex-basis:58px; padding:5px 2px 6px; }
+      .day-tab strong { font-size:17px; }
+      .search { flex-basis:0; }
+      h2 { font-size:22px; }
+      .back-top { right:16px; bottom:16px; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip" data-i18n="skip">Skip to activities</a>
+  <header>
+    <div class="wrap top">
+      <a class="brand" href="./">Leikki<small data-i18n="brand">ESPOO · HELSINKI · VANTAA · AGES 0-8</small></a>
+      <div class="header-controls">
+        <label class="lang">
+          <span class="sr-only" data-i18n="languageLabel">Language</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+          <select id="language"><option value="en" lang="en">English</option><option value="fi" lang="fi">Suomi</option></select>
+        </label>
+        <button type="button" class="icon-btn" id="theme" aria-label="Switch to day mode" title="Switch to day mode">
+          <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="intro">
+    <div class="wrap">
+      <h1 data-i18n="heading">Things to do with little ones</h1>
+      <p class="range" id="range" data-i18n="loading">Loading activities...</p>
+      <div class="status" id="status" aria-live="polite"></div>
+      <div id="warning" class="warning" hidden></div>
+    </div>
+  </section>
+
+  <div class="toolbar" id="toolbar">
+    <div class="wrap">
+      <div class="days" id="days" role="tablist" aria-label="Days"></div>
+      <div class="filters">
+        <label class="search">
+          <span class="sr-only" data-i18n="search">Search activity or place</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="search" class="field" type="search" autocomplete="off" data-i18n-placeholder="search" placeholder="Search activity or place">
+        </label>
+        <button type="button" class="filter-toggle" id="filter-toggle" aria-expanded="false" aria-controls="selects">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+          <span data-i18n="filters">Filters</span><span class="badge" id="filter-count" hidden>0</span>
+        </button>
+        <div class="selects" id="selects">
+          <select id="age" class="field" aria-label="Child's age"></select>
+          <select id="city" class="field" aria-label="City"></select>
+          <select id="price" class="field" aria-label="Price"></select>
+          <select id="environment" class="field" aria-label="Setting"></select>
+          <select id="sort" class="field" aria-label="Order"></select>
+        </div>
+      </div>
+      <div class="chips" id="chips" role="group" aria-label="Activity type"></div>
+    </div>
+  </div>
+
+  <main class="wrap" id="main" tabindex="-1">
+    <div id="results" aria-live="polite"><p class="empty" data-i18n="loading">Loading activities...</p></div>
+    <p class="notice" data-i18n="check"></p>
+    <details class="directory"><summary data-i18n="more">More places and calendars</summary><p data-i18n="directoryNote"></p><div id="directory"></div></details>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span data-i18n="footer">Families in Espoo, Helsinki and Vantaa, ages 0-8. Updated daily.</span>
+      <span><span data-i18n="attribution">Event data:</span> <a href="https://api.espoo.fi/events/v1/">Espoo</a> / <a href="https://api.hel.fi/linkedevents/v1/">Helmet</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+    </div>
+  </footer>
+
+  <button type="button" id="back-top" class="back-top" aria-label="Back to top" title="Back to top">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+  </button>
+
+  <noscript><p class="wrap">JavaScript is needed to display the calendar. / Kalenteri tarvitsee JavaScriptin.</p></noscript>
+
+  <script type="module">
+    const copy = {
+      en: {
+        skip:'Skip to activities', brand:'ESPOO · HELSINKI · VANTAA · AGES 0-8', heading:'Things to do with little ones', loading:'Loading activities...', languageLabel:'Language',
+        toDay:'Switch to day mode', toDark:'Switch to dark mode', today:'Today', nextWeek:'Next week', days:'Days',
+        search:'Search activity or place', filters:'Filters', reset:'Clear filters',
+        age:"Child's age", anyAge:'Any age', ageUnder1:'Under 1 year', ageYear:'{n} year', ageYears:'{n} years',
+        city:'City', allCities:'All cities', espooCity:'Espoo', helsinkiCity:'Helsinki', vantaaCity:'Vantaa',
+        priceLabel:'Price', anyPrice:'Free & paid', freeOnly:'Free only', paidOnly:'Paid only', paid:'Paid', admission:'Admission fee', priceUnknown:'Price: check source', tickets:'Tickets & prices',
+        environment:'Setting', anySetting:'Any setting', indoor:'Indoor', outdoor:'Outdoor', unknown:'Not specified',
+        sort:'Order', bestFirst:'Recommended first', timeFirst:'Starting time',
+        activityType:'Activity type', allActivities:'Everything', movement:'Move & dance', play:'Play & meet', creative:'Make & explore', quiet:'Quiet moments',
+        activities:'activities', activity:'activity', free:'Free', original:'View original', register:'Registration',
+        ages:'Ages', allAge:'All ages', unspecifiedAge:'Age not given', outdated:'Outdated', photo:'Photo', finnishText:'Original title',
+        moreInfo:'Event details', language:'Event language', notGiven:'Not specified',
+        rating:'Recommendation', starsOf:'{n} out of 5 stars', whyRating:'Why this rating?',
+        ratingNote:'A rule-based suggestion, not a review or guarantee. Points out of 100 become stars (20 points = 1 star). Play and movement weigh most; missing details earn nothing.',
+        freeSource:'Free of charge', pricedOffer:'Price stated up front', knownAge:'Age guidance provided', duration:'30-120 minute session', dropIn:'No advance registration needed', knownVenue:'Named venue',
+        noEvents:'No published free activities found for this day.', noResults:'No matches with these filters.',
+        prevDay:'Previous day', nextDay:'Next day', backTop:'Back to top',
+        check:'Check the original page before leaving. Unspecified ages and prices are flagged.',
+        more:'More places and calendars', directoryNote:'Links only: these are not verified sessions for the dates shown. Check opening hours and prices on each site.',
+        footer:'Families in Espoo, Helsinki and Vantaa, ages 0-8. Updated daily.', attribution:'Event data:', updated:'Last updated',
+        stale:'This snapshot has not been updated recently. Check the original sources.', failed:'Some sources could not be updated. Retained listings are marked outdated.',
+        dateWarning:'The saved calendar does not cover all of next week.', error:'The calendar could not be loaded.', retry:'Try again',
+        espoo:'Espoo events', helsinki:'Helsinki events', vantaa:'Vantaa events', library:'Helmet library events', mll:'MLL family activities', aurora:'Children’s Cultural Centre Aurora', vantaaParks:'Vantaa resident parks',
+        leosEspoo:'Leo’s Espoo (Suomenoja)', leosHelsinki:'Leo’s Helsinki', superpark:'SuperPark', leikkiluola:'Leikkiluola (Hakaniemi)',
+        groupCalendars:'City calendars', groupPaid:'Indoor play parks (paid)', groupFree:'Free family places',
+        collected:'Included in automatic event collection', directoryOnly:'Browse its calendar; not collected automatically', mllNote:'Local family cafés and free family exercise; check each local schedule.', playpark:'Commercial indoor playground; entry fee', parksNote:'Free open play at resident parks'
+      },
+      fi: {
+        skip:'Siirry tapahtumiin', brand:'ESPOO · HELSINKI · VANTAA · 0-8-VUOTIAILLE', heading:'Tekemistä pienten kanssa', loading:'Ladataan tapahtumia...', languageLabel:'Kieli',
+        toDay:'Vaihda vaaleaan tilaan', toDark:'Vaihda tummaan tilaan', today:'Tänään', nextWeek:'Ensi viikko', days:'Päivät',
+        search:'Hae tapahtumaa tai paikkaa', filters:'Suodattimet', reset:'Tyhjennä suodattimet',
+        age:'Lapsen ikä', anyAge:'Kaikki iät', ageUnder1:'Alle 1 vuotta', ageYear:'{n} vuosi', ageYears:'{n} vuotta',
+        city:'Kaupunki', allCities:'Kaikki kaupungit', espooCity:'Espoo', helsinkiCity:'Helsinki', vantaaCity:'Vantaa',
+        priceLabel:'Hinta', anyPrice:'Maksuttomat ja maksulliset', freeOnly:'Vain maksuttomat', paidOnly:'Vain maksulliset', paid:'Maksullinen', admission:'Pääsymaksu', priceUnknown:'Hinta: tarkista lähde', tickets:'Liput ja hinnat',
+        environment:'Ympäristö', anySetting:'Kaikki ympäristöt', indoor:'Sisällä', outdoor:'Ulkona', unknown:'Ei ilmoitettu',
+        sort:'Järjestys', bestFirst:'Suositellut ensin', timeFirst:'Alkamisaika',
+        activityType:'Tekemisen tyyppi', allActivities:'Kaikki', movement:'Liiku ja tanssi', play:'Leiki ja tapaa', creative:'Luo ja tutki', quiet:'Rauhalliset hetket',
+        activities:'tapahtumaa', activity:'tapahtuma', free:'Maksuton', original:'Katso alkuperäinen', register:'Ilmoittautuminen',
+        ages:'Ikä', allAge:'Ei ikärajaa', unspecifiedAge:'Ikää ei ilmoitettu', outdated:'Vanhentunut', photo:'Kuva', finnishText:'Alkuperäinen nimi',
+        moreInfo:'Tapahtuman tiedot', language:'Tapahtuman kieli', notGiven:'Ei ilmoitettu',
+        rating:'Suositus', starsOf:'{n} / 5 tähteä', whyRating:'Mistä arvio tulee?',
+        ratingNote:'Sääntöpohjainen ehdotus, ei asiakasarvio tai takuu. 100 pisteestä lasketaan tähdet (20 pistettä = 1 tähti). Leikki ja liikkuminen painottuvat; puuttuvista tiedoista ei saa pisteitä.',
+        freeSource:'Maksuton', pricedOffer:'Hinta ilmoitettu etukäteen', knownAge:'Ikätiedot ilmoitettu', duration:'30-120 minuutin tapahtuma', dropIn:'Ennakkoilmoittautumista ei tarvita', knownVenue:'Tapahtumapaikka ilmoitettu',
+        noEvents:'Tälle päivälle ei löytynyt julkaistuja maksuttomia tapahtumia.', noResults:'Ei tuloksia näillä suodattimilla.',
+        prevDay:'Edellinen päivä', nextDay:'Seuraava päivä', backTop:'Takaisin ylös',
+        check:'Tarkista alkuperäinen sivu ennen lähtöä. Puuttuvat ikä- ja hintatiedot merkitään.',
+        more:'Lisää paikkoja ja kalentereita', directoryNote:'Vain linkkejä: nämä eivät ole vahvistettuja tapahtumia näytetyille päiville. Tarkista aukioloajat ja hinnat sivuilta.',
+        footer:'Espoon, Helsingin ja Vantaan perheille, 0-8-vuotiaille. Päivitetään päivittäin.', attribution:'Tapahtumatiedot:', updated:'Päivitetty',
+        stale:'Tietoja ei ole päivitetty äskettäin. Tarkista alkuperäiset lähteet.', failed:'Kaikkia lähteitä ei voitu päivittää. Säilytetyt tapahtumat on merkitty vanhentuneiksi.',
+        dateWarning:'Tallennettu kalenteri ei kata koko ensi viikkoa.', error:'Kalenteria ei voitu ladata.', retry:'Yritä uudelleen',
+        espoo:'Espoon tapahtumat', helsinki:'Helsingin tapahtumat', vantaa:'Vantaan tapahtumat', library:'Helmet-kirjastojen tapahtumat', mll:'MLL:n perhetoiminta', aurora:'Lasten kulttuurikeskus Aurora', vantaaParks:'Vantaan asukaspuistot',
+        leosEspoo:'Leo’s Espoo (Suomenoja)', leosHelsinki:'Leo’s Helsinki', superpark:'SuperPark', leikkiluola:'Leikkiluola (Hakaniemi)',
+        groupCalendars:'Kaupunkien kalenterit', groupPaid:'Sisäleikkipuistot (maksulliset)', groupFree:'Maksuttomat perhepaikat',
+        collected:'Mukana automaattisessa tapahtumahaussa', directoryOnly:'Selaa kalenteria; ei kerätä automaattisesti', mllNote:'Paikalliset perhekahvilat ja maksuton perheliikunta; tarkista paikalliset aikataulut.', playpark:'Kaupallinen sisäleikkipuisto; pääsymaksu', parksNote:'Maksutonta avointa leikkiä asukaspuistoissa'
+      }
+    };
+    const sources = [
+      { group:'groupCalendars', key:'espoo', en:'https://www.espoo.fi/en/events', fi:'https://www.espoo.fi/fi/tapahtumat', note:'collected' },
+      { group:'groupCalendars', key:'helsinki', en:'https://tapahtumat.hel.fi/en', fi:'https://tapahtumat.hel.fi/fi', note:'collected' },
+      { group:'groupCalendars', key:'vantaa', en:'https://www.vantaa.fi/en/events', fi:'https://tapahtumat.vantaa.fi/fi-FI', note:'directoryOnly' },
+      { group:'groupCalendars', key:'library', en:'https://helmet.finna.fi/?lng=en-gb', fi:'https://helmet.finna.fi/?lng=fi', note:'collected' },
+      { group:'groupFree', key:'mll', en:'https://www.mll.fi/yhdistyshaku/', fi:'https://www.mll.fi/yhdistyshaku/', note:'mllNote' },
+      { group:'groupFree', key:'aurora', en:'https://www.espoo.fi/en/childrens-cultural-centre-aurora', fi:'https://www.espoo.fi/fi/lasten-kulttuurikeskus-aurora', note:'collected' },
+      { group:'groupFree', key:'vantaaParks', en:'https://www.vantaa.fi/fi/palveluhakemisto/palvelu/asukaspuistot', fi:'https://www.vantaa.fi/fi/palveluhakemisto/palvelu/asukaspuistot', note:'parksNote' },
+      { group:'groupPaid', key:'leosEspoo', en:'https://www.leos.fi/en/our-playcenters/espoo', fi:'https://www.leos.fi/en/our-playcenters/espoo', note:'playpark' },
+      { group:'groupPaid', key:'leosHelsinki', en:'https://www.leos.fi/en/our-playcenters/helsinki', fi:'https://www.leos.fi/en/our-playcenters/helsinki', note:'playpark' },
+      { group:'groupPaid', key:'superpark', en:'https://superpark.fi/', fi:'https://superpark.fi/', note:'playpark' },
+      { group:'groupPaid', key:'leikkiluola', en:'https://www.leikkiluola.fi/', fi:'https://www.leikkiluola.fi/', note:'playpark' }
+    ];
+    const cityKeys = ['espoo','helsinki','vantaa'];
+    const categories = ['all','movement','play','creative','quiet'];
+    const store = {
+      get(key) { try { return localStorage.getItem(key); } catch { return null; } },
+      set(key, value) { try { localStorage.setItem(key, value); } catch {} }
+    };
+
+    let language = store.get('leikki-language') === 'fi' ? 'fi' : 'en';
+    let theme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+    let data = null, loadFailed = false, category = 'all', selectedDate = null;
+    const saved = { age:store.get('leikki-age'), city:store.get('leikki-city'), price:store.get('leikki-price') };
+
+    const get = id => document.getElementById(id);
+    const t = (key, n) => (copy[language][key] ?? copy.en[key] ?? key).replace('{n}', n);
+    const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const text = value => value?.[language] || value?.fi || value?.en || '';
+    const locale = () => language === 'fi' ? 'fi-FI' : 'en-GB';
+    const format = (value, options) => new Intl.DateTimeFormat(locale(), { timeZone:'Europe/Helsinki', ...options }).format(new Date(value));
+    const noon = date => date + 'T12:00:00Z';
+    const link = (url, label, className = '') => `<a class="${className}" href="${escape(url)}" target="_blank" rel="noopener noreferrer">${escape(label)}</a>`;
+    function formatISO(date) {
+      const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Helsinki',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date).map(x => [x.type,x.value]));
+      return `${p.year}-${p.month}-${p.day}`;
+    }
+    const addDays = (iso, n) => { const d = new Date(noon(iso)); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0,10); };
+
+    /* ---------- Static controls (rebuilt on language change) ---------- */
+    function buildControls() {
+      const keep = id => get(id).value;
+      const age = keep('age') || saved.age || 'all', city = keep('city') || saved.city || 'all', price = keep('price') || saved.price || 'all', env = keep('environment') || 'all', sort = keep('sort') || 'score';
+      get('age').innerHTML = `<option value="all">${escape(t('anyAge'))}</option>` + Array.from({length:9}, (_, n) =>
+        `<option value="${n}">${escape(n === 0 ? t('ageUnder1') : t(n === 1 ? 'ageYear' : 'ageYears', n))}</option>`).join('');
+      get('environment').innerHTML = ['all','indoor','outdoor','unknown'].map(v => `<option value="${v}">${escape(t(v === 'all' ? 'anySetting' : v))}</option>`).join('');
+      get('city').innerHTML = `<option value="all">${escape(t('allCities'))}</option>` + cityKeys.map(c => `<option value="${c}">${escape(t(c + 'City'))}</option>`).join('');
+      get('price').innerHTML = [['all','anyPrice'],['free','freeOnly'],['paid','paidOnly']].map(([v,k]) => `<option value="${v}">${escape(t(k))}</option>`).join('');
+      get('city').value = cityKeys.includes(city) ? city : 'all';
+      get('price').value = ['free','paid'].includes(price) ? price : 'all';
+      get('sort').innerHTML = `<option value="score">${escape(t('bestFirst'))}</option><option value="time">${escape(t('timeFirst'))}</option>`;
+      get('age').value = [...get('age').options].some(o => o.value === age) ? age : 'all';
+      get('environment').value = env; get('sort').value = sort;
+      [['age','age'],['city','city'],['price','priceLabel'],['environment','environment'],['sort','sort']].forEach(([id,key]) => get(id).setAttribute('aria-label', t(key)));
+      get('chips').setAttribute('aria-label', t('activityType'));
+      get('days').setAttribute('aria-label', t('days'));
+      document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+      get('language').value = language;
+      get('directory').innerHTML = [...new Set(sources.map(s => s.group))].map(group => `<div class="dir-group"><h4>${escape(t(group))}</h4><div class="source-grid">${sources.filter(s => s.group === group).map(s => `<div class="source-item">${link(s[language], t(s.key))}<small>${escape(t(s.note))}</small></div>`).join('')}</div></div>`).join('');
+      get('back-top').title = t('backTop'); get('back-top').setAttribute('aria-label', t('backTop'));
+      document.documentElement.lang = language;
+      document.title = language === 'en' ? 'Leikki | Kids’ activities' : 'Leikki | Tekemistä lasten kanssa';
+      applyTheme();
+    }
+    function applyTheme() {
+      document.documentElement.dataset.theme = theme;
+      document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#2c3632' : '#ffffff';
+      const label = t(theme === 'dark' ? 'toDay' : 'toDark');
+      get('theme').setAttribute('aria-label', label); get('theme').title = label;
+    }
+
+    /* ---------- Cards ---------- */
+    function stars(score) {
+      const value = Math.round(score / 10) / 2;            // 0-5 in half steps
+      const label = t('starsOf', value.toLocaleString(locale()));
+      return `<span class="stars" role="img" aria-label="${escape(t('rating') + ': ' + label)}" title="${escape(label)}">★★★★★<span style="width:${value * 20}%">★★★★★</span></span>`;
+    }
+    function ageLabel(age) {
+      if (age.min !== null || age.max !== null) {
+        if (age.min === 0 && (age.max === null || age.max >= 99)) return t('allAge');
+        return `${t('ages')} ${age.min ?? 0}${age.max === null || age.max >= 99 ? '+' : `-${age.max}`}`;
+      }
+      return age.confirmed ? t('allAge') : t('unspecifiedAge');
+    }
+    function card(a) {
+      const sameDayEnd = a.end && formatISO(new Date(a.end)) === a.date;
+      const hm = v => format(v, { hour:'2-digit', minute:'2-digit' });
+      const minutes = sameDayEnd ? Math.round((new Date(a.end) - new Date(a.start)) / 60000) : 0;
+      const duration = minutes > 0 ? (minutes < 60 ? `${minutes} min` : `${(minutes / 60).toLocaleString(locale(), { maximumFractionDigits:1 })} h`) : '';
+      const description = text(a.description);
+      const descLang = a.description?.[language] ? language : a.description?.fi ? 'fi' : 'en';
+      const titleLang = a.title?.[language] ? language : a.title?.fi ? 'fi' : 'en';
+      const photo = a.image ? `<img class="photo" src="${escape(a.image.url)}" alt="" loading="lazy" referrerpolicy="no-referrer"><p class="credit">${escape(t('photo'))}: ${escape(a.image.credit)}</p>` : '';
+      const pr = a.price || { status:'free' };
+      const priceText = text(pr.text).replace(/^\d+(?:[.,]\d+)?$/, '$& €');
+      const priceTag = pr.status === 'free' ? `<span class="tag free">${escape(t('free'))}</span>`
+        : pr.status === 'paid' ? `<span class="tag paid" title="${escape(priceText)}">${escape(pr.note === 'admission' ? t('admission') : priceText.length && priceText.length <= 28 ? priceText : t('paid'))}</span>`
+        : `<span class="tag caution">${escape(t('priceUnknown'))}</span>`;
+      return `<article class="card">${photo}<div class="card-body">
+        <div class="card-top"><span class="time">${escape(hm(a.start))}${sameDayEnd ? ` – ${escape(hm(a.end))}` : ''}${duration ? `<small>${escape(duration)}</small>` : ''}</span>${stars(a.score.value)}</div>
+        <h3 lang="${titleLang}">${escape(text(a.title))}</h3>${language !== titleLang ? `<small class="orig-note">${escape(t('finnishText'))}</small>` : ''}
+        <p class="venue">${escape(text(a.venue))}</p><p class="address">${escape(text(a.address))}</p>
+        <div class="tags">${priceTag}<span class="tag city">${escape(t(a.city + 'City'))}</span><span class="tag">${escape(t(a.category))}</span><span class="tag${a.ages.confirmed ? '' : ' caution'}">${escape(ageLabel(a.ages))}</span>${a.environment !== 'unknown' ? `<span class="tag">${escape(t(a.environment))}</span>` : ''}${a.stale ? `<span class="tag caution">${escape(t('outdated'))}</span>` : ''}</div>
+        <details><summary>${escape(t('moreInfo'))}</summary>${description ? `<p lang="${descLang}">${escape(description)}</p>` : ''}<p>${escape(t('language'))}: ${escape(a.languages.length ? a.languages.join(', ').toUpperCase() : t('notGiven'))}${pr.status === 'paid' && priceText ? `<br>${escape(t('priceLabel'))}: ${escape(priceText)}` : ''}</p></details>
+        <details><summary>${escape(t('whyRating'))}</summary><ul>${a.score.reasons.map(r => `<li>+${r.points}: ${escape(t(r.key))}</li>`).join('')}</ul><p>${escape(t('ratingNote'))}</p></details>
+        <div class="card-footer">${link(a.sourceUrls[language] || a.sourceUrls.fi || a.sourceUrls.en, t('original') + ' ↗', 'original')}${a.registrationUrl ? link(a.registrationUrl, t('register')) : pr.url ? link(pr.url, t('tickets')) : ''}</div>
+      </div></article>`;
+    }
+
+    /* ---------- Filtering ---------- */
+    function matchesFilters(a, { ignoreCategory = false } = {}) {
+      const city = get('city').value, price = get('price').value, env = get('environment').value, age = get('age').value;
+      const search = get('search').value.trim().toLocaleLowerCase(locale());
+      return (city === 'all' || a.city === city)
+        && (price === 'all' || (a.price?.status ?? 'free') === price)
+        && (ignoreCategory || category === 'all' || a.category === category)
+        && (env === 'all' || a.environment === env)
+        && (age === 'all' || ((a.ages.min === null || a.ages.min <= +age) && (a.ages.max === null || a.ages.max >= +age)))
+        && (!search || [a.title, a.venue, a.address].map(v => Object.values(v || {}).join(' ')).join(' ').toLocaleLowerCase(locale()).includes(search));
+    }
+    const activeFilterCount = () => ['city','price','environment','age'].filter(id => get(id).value !== 'all').length + (category !== 'all') + (get('search').value.trim() ? 1 : 0);
+    function resetFilters() {
+      ['city','price','environment','age'].forEach(id => { get(id).value = 'all'; store.set('leikki-' + id, 'all'); }); get('search').value = ''; category = 'all'; render();
+    }
+
+    /* ---------- Render ---------- */
+    let visibleDays = [];
+    function render() {
+      if (!data) {
+        if (loadFailed) { get('results').innerHTML = `<div class="error"><p>${escape(t('error'))}</p><button type="button" class="btn primary" id="retry">${escape(t('retry'))}</button></div>`; get('retry').onclick = load; }
+        return;
+      }
+      const now = new Date(), todayISO = formatISO(now);
+      const nextMondayISO = addDays(todayISO, 8 - (new Date(noon(todayISO)).getUTCDay() || 7));
+      const requiredEndISO = addDays(nextMondayISO, 7);
+      visibleDays = data.week.days.filter(d => d >= todayISO && d < requiredEndISO);
+      if (!visibleDays.includes(selectedDate)) selectedDate = visibleDays[0] ?? null;
+
+      const first = visibleDays[0] ?? data.week.start, last = visibleDays.at(-1) ?? data.week.days.at(-1);
+      get('range').textContent = `${format(noon(first),{day:'numeric',month:'long'})} – ${format(noon(last),{day:'numeric',month:'long',year:'numeric'})}`;
+      get('status').textContent = `${t('updated')}: ${format(data.generatedAt,{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'})}`;
+      const warnings = [
+        data.week.end < requiredEndISO || data.week.start > todayISO ? t('dateWarning') : '',
+        now - new Date(data.generatedAt) > 36 * 3600000 ? t('stale') : '',
+        data.sources.some(s => s.status !== 'ok') ? t('failed') : ''
+      ].filter(Boolean);
+      get('warning').hidden = !warnings.length; get('warning').textContent = warnings.join(' ');
+
+      const filtered = data.activities.filter(a => visibleDays.includes(a.date) && matchesFilters(a));
+
+      // Day tabs
+      get('days').innerHTML = visibleDays.map(date => {
+        const count = filtered.filter(a => a.date === date).length;
+        const divider = date === nextMondayISO && date !== visibleDays[0] ? `<div class="week-divider" aria-hidden="true"><span>${escape(t('nextWeek'))}</span></div>` : '';
+        const selected = date === selectedDate;
+        return `${divider}<button type="button" role="tab" class="day-tab${count ? '' : ' empty-day'}" data-date="${date}" aria-selected="${selected}" tabindex="${selected ? 0 : -1}" aria-controls="results">
+          <span class="${date === todayISO ? 'today' : ''}">${escape(date === todayISO ? t('today') : format(noon(date),{weekday:'short'}))}</span>
+          <strong>${Number(date.slice(-2))}</strong><span class="count">${count}</span></button>`;
+      }).join('');
+      const tab = get('days').querySelector('[aria-selected="true"]');
+      if (tab) { const strip = get('days'); const left = tab.offsetLeft, right = left + tab.offsetWidth; if (left < strip.scrollLeft || right > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = left - (strip.clientWidth - tab.offsetWidth) / 2; }
+
+      // Category chips with counts for the selected day
+      const dayAll = data.activities.filter(a => a.date === selectedDate && matchesFilters(a, { ignoreCategory:true }));
+      const n = activeFilterCount();
+      get('chips').innerHTML = categories.map(c => {
+        const count = c === 'all' ? dayAll.length : dayAll.filter(a => a.category === c).length;
+        return `<button type="button" data-category="${c}" aria-pressed="${category === c}">${escape(t(c === 'all' ? 'allActivities' : c))} <span aria-hidden="true">${count}</span></button>`;
+      }).join('') + (n ? `<button type="button" class="reset" id="reset">${escape(t('reset'))}</button>` : '');
+      get('filter-count').hidden = !n; get('filter-count').textContent = n;
+
+      // Results for selected day
+      if (!selectedDate) { get('results').innerHTML = `<p class="empty">${escape(t('noEvents'))}</p>`; return; }
+      const day = filtered.filter(a => a.date === selectedDate)
+        .sort((x, y) => (get('sort').value === 'score' ? y.score.value - x.score.value : 0) || x.start.localeCompare(y.start));
+      const anyThatDay = data.activities.some(a => a.date === selectedDate);
+      const idx = visibleDays.indexOf(selectedDate);
+      const prev = visibleDays[idx - 1], next = visibleDays[idx + 1];
+      get('results').innerHTML = `<div class="day-heading"><h2>${escape(format(noon(selectedDate),{weekday:'long',day:'numeric',month:'long'}))}</h2><span class="meta">${day.length} ${escape(t(day.length === 1 ? 'activity' : 'activities'))}</span></div>`
+        + (day.length ? `<div class="cards">${day.map(card).join('')}</div>`
+          : `<div class="empty"><p>${escape(t(anyThatDay ? 'noResults' : 'noEvents'))}</p>${anyThatDay && n ? `<button type="button" class="btn" data-reset>${escape(t('reset'))}</button>` : ''}</div>`)
+        + `<nav class="pager" aria-label="${escape(t('days'))}">${prev ? `<button type="button" class="btn" data-go="${prev}">← ${escape(format(noon(prev),{weekday:'short',day:'numeric',month:'numeric'}))}</button>` : '<span></span>'}${next ? `<button type="button" class="btn" data-go="${next}">${escape(format(noon(next),{weekday:'short',day:'numeric',month:'numeric'}))} →</button>` : ''}</nav>`;
+      document.querySelectorAll('.photo').forEach(img => img.addEventListener('error', () => { img.nextElementSibling?.remove(); img.remove(); }, { once:true }));
+    }
+
+    function selectDay(date, { focus = false } = {}) {
+      if (!date || date === selectedDate) return;
+      selectedDate = date;
+      try { history.replaceState(null, '', '#' + date); } catch {}
+      render();
+      if (focus) get('days').querySelector(`[data-date="${date}"]`)?.focus();
+      // Keep the toolbar in place and bring the list start into view
+      const intro = document.querySelector('.intro');
+      const anchor = intro.offsetTop + intro.offsetHeight;
+      if (window.scrollY > anchor) window.scrollTo({ top: anchor, behavior:'instant' });
+    }
+
+    async function load() {
+      loadFailed = false;
+      get('results').innerHTML = `<p class="empty">${escape(t('loading'))}</p>`;
+      try {
+        const response = await fetch('./data/activities.json', { cache:'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        if (payload.schemaVersion !== 3 || payload.week?.days?.length < 8 || payload.week.days.length > 14 || !Array.isArray(payload.activities)) throw new Error('Invalid snapshot');
+        data = payload;
+        const hash = location.hash.slice(1);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(hash)) selectedDate = hash;
+      } catch { loadFailed = true; }
+      render();
+    }
+
+    /* ---------- Events ---------- */
+    get('language').addEventListener('change', e => { language = e.target.value; store.set('leikki-language', language); buildControls(); render(); });
+    get('theme').addEventListener('click', () => { theme = theme === 'dark' ? 'light' : 'dark'; store.set('leikki-theme', theme); applyTheme(); });
+    ['environment','sort'].forEach(id => get(id).addEventListener('change', render));
+    ['age','city','price'].forEach(id => get(id).addEventListener('change', e => { store.set('leikki-' + id, e.target.value); render(); }));
+    let searchTimer; get('search').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(render, 120); });
+    get('filter-toggle').addEventListener('click', e => { const open = get('selects').classList.toggle('open'); e.currentTarget.setAttribute('aria-expanded', String(open)); });
+    get('chips').addEventListener('click', e => {
+      if (e.target.closest('#reset')) return resetFilters();
+      const b = e.target.closest('[data-category]'); if (!b) return;
+      category = b.dataset.category; render();
+    });
+    get('days').addEventListener('click', e => { const b = e.target.closest('[data-date]'); if (b) selectDay(b.dataset.date); });
+    get('days').addEventListener('keydown', e => {
+      const i = visibleDays.indexOf(selectedDate);
+      const target = { ArrowRight: visibleDays[i + 1], ArrowLeft: visibleDays[i - 1], Home: visibleDays[0], End: visibleDays.at(-1) }[e.key];
+      if (target) { e.preventDefault(); selectDay(target, { focus:true }); }
+    });
+    get('results').addEventListener('click', e => {
+      const go = e.target.closest('[data-go]'); if (go) return selectDay(go.dataset.go);
+      if (e.target.closest('[data-reset]')) resetFilters();
+    });
+    const backTop = get('back-top');
+    backTop.addEventListener('click', () => window.scrollTo({ top:0 }));
+    const onScroll = () => {
+      backTop.classList.toggle('show', window.scrollY > 500);
+      get('toolbar').classList.toggle('stuck', get('toolbar').getBoundingClientRect().top <= 0 && window.scrollY > 0);
+    };
+    window.addEventListener('scroll', onScroll, { passive:true });
+
+    buildControls(); onScroll(); render(); load();
+  </script>
+</body>
+</html>
