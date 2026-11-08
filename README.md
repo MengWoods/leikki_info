@@ -23,7 +23,7 @@ Import this repository into Vercel. Choose **Other** as the framework, leave the
 
 ## Daily GitHub bot
 
-The workflow runs **daily at 06:00 UTC** (08:00 in Finnish winter, 09:00 in summer), and supports manual runs under **Actions > Update family activities > Run workflow**. Daily updates replace the original weekly schedule so that a new full next-week buffer is collected after the week changes. GitHub schedules can be delayed, disabled, or fail: the page warns when its saved range cannot cover the whole next week. This is not a guarantee of uninterrupted coverage or activities every day.
+The workflow runs **daily at 01:00 Finnish time**, using `cron: '0 1 * * *'` with `timezone: 'Europe/Helsinki'`. GitHub handles daylight saving automatically: this is 23:00 UTC on the preceding day in winter and 22:00 UTC in summer. Manual runs remain available under **Actions > Update family activities > Run workflow**. The webpage shows the snapshot's actual last-updated date and time in Europe/Helsinki, not the time the page was opened. Daily updates maintain a full next-week buffer after the week changes. GitHub schedules can be delayed, disabled, or fail: the page warns when its saved range cannot cover the whole next week. This is not a guarantee of uninterrupted coverage or activities every day.
 
 Push these files to the default branch and enable GitHub Actions. The workflow needs permission to write repository contents; branch protection may require an exception for the bot. On public repositories, GitHub can disable scheduled workflows after 60 days without repository activity. Check workflow health periodically. No commit or push is performed by the local update command.
 
