@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#232b28">
+  <meta name="theme-color" content="#3e4c45">
   <meta name="description" content="Family activities for ages 0-8 in Espoo, Helsinki and Vantaa, from today through next week.">
   <title>Leikki | Kids’ activities</title>
   <script>
@@ -15,10 +15,10 @@
   <style>
     :root {
       color-scheme: dark;
-      --paper:#232b28; --surface:#2c3632; --raised:#36423d; --line:#46534d; --field:#2f3a35;
-      --ink:#eaf1ed; --muted:#aebcb5; --green:#94dbbb; --tint:#2f4a3e; --coral:#f2a78a;
-      --accent:#2f8460; --on-accent:#fff; --star:#f4c463; --star-off:#56635c;
-      --shadow:0 1px 2px #0003, 0 4px 14px #0002; --warn-bg:#4a3a2f; --warn-ink:#f8d8c6;
+      --paper:#34403a; --surface:#3e4c45; --raised:#495850; --line:#5d6d65; --field:#435149;
+      --ink:#eef4f0; --muted:#bfcdc6; --green:#a3e6c7; --tint:#3d5a4c; --coral:#f2a78a;
+      --accent:#2f8460; --on-accent:#fff; --star:#f4c463; --star-off:#67776f;
+      --shadow:0 1px 2px #0002, 0 4px 14px #0000001a; --warn-bg:#57463b; --warn-ink:#f8d8c6;
     }
     :root[data-theme="light"] {
       color-scheme: light;
@@ -56,7 +56,7 @@
     .icon-sun { display:none; } :root[data-theme="dark"] .icon-sun { display:block; } :root[data-theme="dark"] .icon-moon { display:none; }
 
     /* Intro */
-    .intro { padding:22px 0 18px; background:linear-gradient(110deg,var(--tint),var(--paper) 70%); }
+    .intro { padding:22px 0 18px; background:linear-gradient(110deg,var(--tint),var(--paper) 60%); }
     h1 { font-family:'Fraunces',serif; font-weight:500; font-size:32px; line-height:1.2; margin:0 0 4px; }
     .range { margin:0; color:var(--muted); }
     .status { font-size:12px; color:var(--muted); margin-top:6px; }
@@ -377,7 +377,7 @@
     }
     function applyTheme() {
       document.documentElement.dataset.theme = theme;
-      document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#2c3632' : '#ffffff';
+      document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#3e4c45' : '#ffffff';
       const label = t(theme === 'dark' ? 'toDay' : 'toDark');
       get('theme').setAttribute('aria-label', label); get('theme').title = label;
     }
