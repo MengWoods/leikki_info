@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#3e4c45">
+  <meta name="theme-color" content="#2e3439">
   <meta name="description" content="Family activities for ages 0-8 in Espoo, Helsinki and Vantaa, from today through next week.">
   <title>Leikki | Kids’ activities</title>
   <script>
@@ -15,10 +15,10 @@
   <style>
     :root {
       color-scheme: dark;
-      --paper:#34403a; --surface:#3e4c45; --raised:#495850; --line:#5d6d65; --field:#435149;
-      --ink:#eef4f0; --muted:#bfcdc6; --green:#a3e6c7; --tint:#3d5a4c; --coral:#f2a78a;
-      --accent:#2f8460; --on-accent:#fff; --star:#f4c463; --star-off:#67776f;
-      --shadow:0 1px 2px #0002, 0 4px 14px #0000001a; --warn-bg:#57463b; --warn-ink:#f8d8c6;
+      --paper:#24292d; --surface:#2e3439; --raised:#394046; --line:#4a535b; --field:#2a3034;
+      --ink:#f4f7f6; --muted:#c9d2ce; --green:#92e5c0; --tint:#2f4a42; --coral:#f2a78a;
+      --accent:#2f8460; --on-accent:#fff; --star:#f4c463; --star-off:#555e66;
+      --shadow:0 1px 2px #0003, 0 4px 14px #00000026; --warn-bg:#4f4038; --warn-ink:#f8d8c6;
     }
     :root[data-theme="light"] {
       color-scheme: light;
@@ -78,22 +78,17 @@
     .week-divider { flex:0 0 auto; align-self:stretch; display:flex; align-items:center; padding:0 2px; }
     .week-divider span { writing-mode:vertical-rl; transform:rotate(180deg); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); border-left:1px solid var(--line); padding-left:6px; }
 
-    .filters { display:flex; gap:8px; align-items:center; padding:2px 0 8px; }
-    .search { flex:1 1 220px; position:relative; display:flex; align-items:center; }
-    .search svg { position:absolute; left:11px; color:var(--muted); pointer-events:none; }
-    .field { background:var(--field); border:1px solid var(--line); border-radius:8px; padding:8px 10px; min-height:40px; color:var(--ink); max-width:100%; font-size:14px; }
-    .field:hover { border-color:var(--muted); }
-    .search .field { width:100%; padding-left:34px; }
-    .selects { display:flex; gap:8px; flex:0 1 auto; }
-    .selects select { flex:1 1 auto; min-width:0; }
-    .filter-toggle { display:none; align-items:center; gap:6px; background:var(--field); border:1px solid var(--line); border-radius:8px; padding:8px 12px; min-height:40px; font-size:14px; font-weight:600; white-space:nowrap; }
-    .filter-toggle .badge { background:var(--accent); color:var(--on-accent); border-radius:999px; font-size:11px; min-width:18px; height:18px; display:inline-grid; place-items:center; padding:0 5px; }
-    .chips { display:flex; gap:6px; overflow-x:auto; padding:0 0 10px; scrollbar-width:none; }
-    .chips::-webkit-scrollbar { display:none; }
-    .chips button { flex:0 0 auto; border:1px solid var(--line); background:transparent; color:var(--muted); border-radius:999px; padding:6px 14px; min-height:36px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; }
-    .chips button:hover { border-color:var(--green); color:var(--ink); }
-    .chips button[aria-pressed="true"] { background:var(--tint); border-color:var(--green); color:var(--green); }
-    .reset { margin-left:auto; border:0 !important; color:var(--green) !important; text-decoration:underline; text-underline-offset:3px; }
+    .filters { display:flex; gap:8px; align-items:center; padding:2px 0 10px; overflow-x:auto; scrollbar-width:none; }
+    .filters::-webkit-scrollbar { display:none; }
+    .pill { position:relative; flex:0 0 auto; display:flex; align-items:center; }
+    .pill::after { content:''; position:absolute; right:13px; width:6px; height:6px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:translateY(-2px) rotate(45deg); pointer-events:none; color:var(--muted); }
+    .pill select { appearance:none; background:var(--field); border:1px solid var(--line); border-radius:999px; padding:7px 32px 7px 14px; min-height:38px; font-size:14px; font-weight:600; color:var(--ink); }
+    .pill select:hover { border-color:var(--muted); }
+    .pill.on select { background:var(--tint); border-color:var(--green); color:var(--green); }
+    .pill.on::after { color:var(--green); }
+    .pill.sort { margin-left:auto; }
+    .pill.sort select { background:transparent; }
+    .reset { flex:0 0 auto; background:none; border:0; color:var(--green); text-decoration:underline; text-underline-offset:3px; font-size:13px; font-weight:600; padding:6px 4px; }
 
     /* Day results */
     main { padding-bottom:40px; }
@@ -157,23 +152,37 @@
     @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .card { animation:none; } .back-top,.toolbar { transition:none; } }
     @media (max-width:960px) {
       .cards,.source-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-      .filters { flex-wrap:wrap; }
-      .filter-toggle { display:flex; }
-      .selects { display:none; flex-basis:100%; flex-wrap:wrap; }
-      .selects.open { display:flex; }
-      .selects select { flex:1 1 calc(50% - 8px); }
     }
     @media (max-width:600px) {
       .wrap { width:calc(100% - 32px); }
-      .top { min-height:60px; }
-      .brand { font-size:26px; }
+      .top { min-height:52px; }
+      .brand { font-size:24px; }
       .brand small { display:none; }
-      h1 { font-size:26px; }
-      .intro { padding:16px 0 14px; }
+      .lang select { min-height:34px; padding:4px 26px 4px 30px; font-size:13px; }
+      .icon-btn { width:34px; height:34px; }
+      .intro { padding:8px 0; background:var(--paper); }
+      .intro .wrap { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 10px; }
+      h1 { display:none; }
+      .range { font-size:13px; font-weight:600; color:var(--ink); }
+      .status { font-size:11px; margin:0; }
+      .warning { flex-basis:100%; margin-top:6px; padding:6px 10px; font-size:12px; }
+      .days { gap:2px; padding:6px 0 4px; }
+      .day-tab { padding:4px 2px 5px; font-size:11px; border-radius:8px; }
+      .day-tab .count { font-size:10px; min-height:14px; }
+      .filters { padding:2px 0 8px; gap:6px; }
+      .pill select { min-height:34px; padding:5px 28px 5px 12px; font-size:13px; }
+      .pill::after { right:11px; }
+      .pill.sort { margin-left:0; }
+      .filters, .days { -webkit-mask-image:linear-gradient(to right,#000 88%,transparent); mask-image:linear-gradient(to right,#000 88%,transparent); }
+      .filters::after { content:''; flex:0 0 24px; }
+      .day-heading { padding:14px 0 10px; }
+      .cards { gap:12px; }
+      .card-body { padding:14px 14px 12px; }
+      .tags { margin:10px 0; }
+      .card-footer { margin-top:10px; padding-top:10px; }
       .cards,.source-grid { grid-template-columns:minmax(0,1fr); }
-      .day-tab { flex-basis:58px; padding:5px 2px 6px; }
+      .day-tab { flex-basis:54px; }
       .day-tab strong { font-size:17px; }
-      .search { flex-basis:0; }
       h2 { font-size:22px; }
       .back-top { right:16px; bottom:16px; }
     }
@@ -210,25 +219,14 @@
   <div class="toolbar" id="toolbar">
     <div class="wrap">
       <div class="days" id="days" role="tablist" aria-label="Days"></div>
-      <div class="filters">
-        <label class="search">
-          <span class="sr-only" data-i18n="search">Search activity or place</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-          <input id="search" class="field" type="search" autocomplete="off" data-i18n-placeholder="search" placeholder="Search activity or place">
-        </label>
-        <button type="button" class="filter-toggle" id="filter-toggle" aria-expanded="false" aria-controls="selects">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
-          <span data-i18n="filters">Filters</span><span class="badge" id="filter-count" hidden>0</span>
-        </button>
-        <div class="selects" id="selects">
-          <select id="age" class="field" aria-label="Child's age"></select>
-          <select id="city" class="field" aria-label="City"></select>
-          <select id="price" class="field" aria-label="Price"></select>
-          <select id="environment" class="field" aria-label="Setting"></select>
-          <select id="sort" class="field" aria-label="Order"></select>
-        </div>
+      <div class="filters" id="filters" role="group" aria-label="Filters">
+        <label class="pill"><span class="sr-only" data-i18n="age">Child's age</span><select id="age"></select></label>
+        <label class="pill"><span class="sr-only" data-i18n="activityType">Activity type</span><select id="category"></select></label>
+        <label class="pill"><span class="sr-only" data-i18n="city">City</span><select id="city"></select></label>
+        <label class="pill"><span class="sr-only" data-i18n="priceLabel">Price</span><select id="price"></select></label>
+        <button type="button" class="reset" id="reset" hidden data-i18n="reset">Clear</button>
+        <label class="pill sort"><span class="sr-only" data-i18n="sort">Order</span><select id="sort"></select></label>
       </div>
-      <div class="chips" id="chips" role="group" aria-label="Activity type"></div>
     </div>
   </div>
 
@@ -256,13 +254,13 @@
       en: {
         skip:'Skip to activities', brand:'ESPOO · HELSINKI · VANTAA · AGES 0-8', heading:'Things to do with little ones', loading:'Loading activities...', languageLabel:'Language',
         toDay:'Switch to day mode', toDark:'Switch to dark mode', today:'Today', nextWeek:'Next week', days:'Days',
-        search:'Search activity or place', filters:'Filters', reset:'Clear filters',
+        filters:'Filters', reset:'Clear',
         age:"Child's age", anyAge:'Any age', ageUnder1:'Under 1 year', ageYear:'{n} year', ageYears:'{n} years',
         city:'City', allCities:'All cities', espooCity:'Espoo', helsinkiCity:'Helsinki', vantaaCity:'Vantaa',
-        priceLabel:'Price', anyPrice:'Free & paid', freeOnly:'Free only', paidOnly:'Paid only', paid:'Paid', admission:'Admission fee', priceUnknown:'Price: check source', tickets:'Tickets & prices',
-        environment:'Setting', anySetting:'Any setting', indoor:'Indoor', outdoor:'Outdoor', unknown:'Not specified',
-        sort:'Order', bestFirst:'Recommended first', timeFirst:'Starting time',
-        activityType:'Activity type', allActivities:'Everything', movement:'Move & dance', play:'Play & meet', creative:'Make & explore', quiet:'Quiet moments',
+        priceLabel:'Price', anyPrice:'Any price', freeOnly:'Free', paidOnly:'Paid', paid:'Paid', admission:'Admission fee', priceUnknown:'Price: check source', tickets:'Tickets & prices',
+        indoor:'Indoor', outdoor:'Outdoor',
+        sort:'Order', bestFirst:'Recommended', timeFirst:'By time',
+        activityType:'Activity type', allActivities:'All activities', movement:'Move & dance', play:'Play & meet', creative:'Make & explore', quiet:'Quiet moments',
         activities:'activities', activity:'activity', free:'Free', original:'View original', register:'Registration',
         ages:'Ages', allAge:'All ages', unspecifiedAge:'Age not given', outdated:'Outdated', photo:'Photo', finnishText:'Original title',
         moreInfo:'Event details', language:'Event language', notGiven:'Not specified',
@@ -284,12 +282,12 @@
       fi: {
         skip:'Siirry tapahtumiin', brand:'ESPOO · HELSINKI · VANTAA · 0-8-VUOTIAILLE', heading:'Tekemistä pienten kanssa', loading:'Ladataan tapahtumia...', languageLabel:'Kieli',
         toDay:'Vaihda vaaleaan tilaan', toDark:'Vaihda tummaan tilaan', today:'Tänään', nextWeek:'Ensi viikko', days:'Päivät',
-        search:'Hae tapahtumaa tai paikkaa', filters:'Suodattimet', reset:'Tyhjennä suodattimet',
+        filters:'Suodattimet', reset:'Tyhjennä',
         age:'Lapsen ikä', anyAge:'Kaikki iät', ageUnder1:'Alle 1 vuotta', ageYear:'{n} vuosi', ageYears:'{n} vuotta',
         city:'Kaupunki', allCities:'Kaikki kaupungit', espooCity:'Espoo', helsinkiCity:'Helsinki', vantaaCity:'Vantaa',
-        priceLabel:'Hinta', anyPrice:'Maksuttomat ja maksulliset', freeOnly:'Vain maksuttomat', paidOnly:'Vain maksulliset', paid:'Maksullinen', admission:'Pääsymaksu', priceUnknown:'Hinta: tarkista lähde', tickets:'Liput ja hinnat',
-        environment:'Ympäristö', anySetting:'Kaikki ympäristöt', indoor:'Sisällä', outdoor:'Ulkona', unknown:'Ei ilmoitettu',
-        sort:'Järjestys', bestFirst:'Suositellut ensin', timeFirst:'Alkamisaika',
+        priceLabel:'Hinta', anyPrice:'Kaikki hinnat', freeOnly:'Maksuttomat', paidOnly:'Maksulliset', paid:'Maksullinen', admission:'Pääsymaksu', priceUnknown:'Hinta: tarkista lähde', tickets:'Liput ja hinnat',
+        indoor:'Sisällä', outdoor:'Ulkona',
+        sort:'Järjestys', bestFirst:'Suositellut', timeFirst:'Aikajärjestys',
         activityType:'Tekemisen tyyppi', allActivities:'Kaikki', movement:'Liiku ja tanssi', play:'Leiki ja tapaa', creative:'Luo ja tutki', quiet:'Rauhalliset hetket',
         activities:'tapahtumaa', activity:'tapahtuma', free:'Maksuton', original:'Katso alkuperäinen', register:'Ilmoittautuminen',
         ages:'Ikä', allAge:'Ei ikärajaa', unspecifiedAge:'Ikää ei ilmoitettu', outdated:'Vanhentunut', photo:'Kuva', finnishText:'Alkuperäinen nimi',
@@ -352,19 +350,17 @@
     /* ---------- Static controls (rebuilt on language change) ---------- */
     function buildControls() {
       const keep = id => get(id).value;
-      const age = keep('age') || saved.age || 'all', city = keep('city') || saved.city || 'all', price = keep('price') || saved.price || 'all', env = keep('environment') || 'all', sort = keep('sort') || 'score';
+      const age = keep('age') || saved.age || 'all', city = keep('city') || saved.city || 'all', price = keep('price') || saved.price || 'all'
+        , sort = keep('sort') || 'score';
       get('age').innerHTML = `<option value="all">${escape(t('anyAge'))}</option>` + Array.from({length:9}, (_, n) =>
         `<option value="${n}">${escape(n === 0 ? t('ageUnder1') : t(n === 1 ? 'ageYear' : 'ageYears', n))}</option>`).join('');
-      get('environment').innerHTML = ['all','indoor','outdoor','unknown'].map(v => `<option value="${v}">${escape(t(v === 'all' ? 'anySetting' : v))}</option>`).join('');
       get('city').innerHTML = `<option value="all">${escape(t('allCities'))}</option>` + cityKeys.map(c => `<option value="${c}">${escape(t(c + 'City'))}</option>`).join('');
       get('price').innerHTML = [['all','anyPrice'],['free','freeOnly'],['paid','paidOnly']].map(([v,k]) => `<option value="${v}">${escape(t(k))}</option>`).join('');
       get('city').value = cityKeys.includes(city) ? city : 'all';
       get('price').value = ['free','paid'].includes(price) ? price : 'all';
       get('sort').innerHTML = `<option value="score">${escape(t('bestFirst'))}</option><option value="time">${escape(t('timeFirst'))}</option>`;
       get('age').value = [...get('age').options].some(o => o.value === age) ? age : 'all';
-      get('environment').value = env; get('sort').value = sort;
-      [['age','age'],['city','city'],['price','priceLabel'],['environment','environment'],['sort','sort']].forEach(([id,key]) => get(id).setAttribute('aria-label', t(key)));
-      get('chips').setAttribute('aria-label', t('activityType'));
+      get('sort').value = sort;
       get('days').setAttribute('aria-label', t('days'));
       document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
       document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
@@ -377,7 +373,7 @@
     }
     function applyTheme() {
       document.documentElement.dataset.theme = theme;
-      document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#3e4c45' : '#ffffff';
+      document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#2e3439' : '#ffffff';
       const label = t(theme === 'dark' ? 'toDay' : 'toDark');
       get('theme').setAttribute('aria-label', label); get('theme').title = label;
     }
@@ -422,18 +418,15 @@
 
     /* ---------- Filtering ---------- */
     function matchesFilters(a, { ignoreCategory = false } = {}) {
-      const city = get('city').value, price = get('price').value, env = get('environment').value, age = get('age').value;
-      const search = get('search').value.trim().toLocaleLowerCase(locale());
+      const city = get('city').value, price = get('price').value, age = get('age').value;
       return (city === 'all' || a.city === city)
         && (price === 'all' || (a.price?.status ?? 'free') === price)
         && (ignoreCategory || category === 'all' || a.category === category)
-        && (env === 'all' || a.environment === env)
-        && (age === 'all' || ((a.ages.min === null || a.ages.min <= +age) && (a.ages.max === null || a.ages.max >= +age)))
-        && (!search || [a.title, a.venue, a.address].map(v => Object.values(v || {}).join(' ')).join(' ').toLocaleLowerCase(locale()).includes(search));
+        && (age === 'all' || ((a.ages.min === null || a.ages.min <= +age) && (a.ages.max === null || a.ages.max >= +age)));
     }
-    const activeFilterCount = () => ['city','price','environment','age'].filter(id => get(id).value !== 'all').length + (category !== 'all') + (get('search').value.trim() ? 1 : 0);
+    const activeFilterCount = () => ['city','price','age'].filter(id => get(id).value !== 'all').length + (category !== 'all');
     function resetFilters() {
-      ['city','price','environment','age'].forEach(id => { get(id).value = 'all'; store.set('leikki-' + id, 'all'); }); get('search').value = ''; category = 'all'; render();
+      ['city','price','age'].forEach(id => { get(id).value = 'all'; store.set('leikki-' + id, 'all'); }); category = 'all'; render();
     }
 
     /* ---------- Render ---------- */
@@ -473,14 +466,16 @@
       const tab = get('days').querySelector('[aria-selected="true"]');
       if (tab) { const strip = get('days'); const left = tab.offsetLeft, right = left + tab.offsetWidth; if (left < strip.scrollLeft || right > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = left - (strip.clientWidth - tab.offsetWidth) / 2; }
 
-      // Category chips with counts for the selected day
+      // Activity-type options with counts for the selected day
       const dayAll = data.activities.filter(a => a.date === selectedDate && matchesFilters(a, { ignoreCategory:true }));
-      const n = activeFilterCount();
-      get('chips').innerHTML = categories.map(c => {
+      get('category').innerHTML = categories.map(c => {
         const count = c === 'all' ? dayAll.length : dayAll.filter(a => a.category === c).length;
-        return `<button type="button" data-category="${c}" aria-pressed="${category === c}">${escape(t(c === 'all' ? 'allActivities' : c))} <span aria-hidden="true">${count}</span></button>`;
-      }).join('') + (n ? `<button type="button" class="reset" id="reset">${escape(t('reset'))}</button>` : '');
-      get('filter-count').hidden = !n; get('filter-count').textContent = n;
+        return `<option value="${c}">${escape(t(c === 'all' ? 'allActivities' : c))} (${count})</option>`;
+      }).join('');
+      get('category').value = category;
+      ['age','category','city','price'].forEach(id => get(id).parentElement.classList.toggle('on', get(id).value !== 'all'));
+      const n = activeFilterCount();
+      get('reset').hidden = !n;
 
       // Results for selected day
       if (!selectedDate) { get('results').innerHTML = `<p class="empty">${escape(t('noEvents'))}</p>`; return; }
@@ -526,15 +521,10 @@
     /* ---------- Events ---------- */
     get('language').addEventListener('change', e => { language = e.target.value; store.set('leikki-language', language); buildControls(); render(); });
     get('theme').addEventListener('click', () => { theme = theme === 'dark' ? 'light' : 'dark'; store.set('leikki-theme', theme); applyTheme(); });
-    ['environment','sort'].forEach(id => get(id).addEventListener('change', render));
+    get('sort').addEventListener('change', render);
+    get('category').addEventListener('change', e => { category = e.target.value; render(); });
+    get('reset').addEventListener('click', resetFilters);
     ['age','city','price'].forEach(id => get(id).addEventListener('change', e => { store.set('leikki-' + id, e.target.value); render(); }));
-    let searchTimer; get('search').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(render, 120); });
-    get('filter-toggle').addEventListener('click', e => { const open = get('selects').classList.toggle('open'); e.currentTarget.setAttribute('aria-expanded', String(open)); });
-    get('chips').addEventListener('click', e => {
-      if (e.target.closest('#reset')) return resetFilters();
-      const b = e.target.closest('[data-category]'); if (!b) return;
-      category = b.dataset.category; render();
-    });
     get('days').addEventListener('click', e => { const b = e.target.closest('[data-date]'); if (b) selectDay(b.dataset.date); });
     get('days').addEventListener('keydown', e => {
       const i = visibleDays.indexOf(selectedDate);
