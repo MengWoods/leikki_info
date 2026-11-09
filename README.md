@@ -52,7 +52,7 @@ Each card shows a 0-5 star recommendation (half-star steps; 20 points = 1 star) 
 
 Missing information earns no points. Scores do not assess staff quality, crowds, travel distance, or a child's personal preferences. An age match only requires the chosen age to fall inside the stated range; check the exact ages on the card. You can switch from recommended ordering to starting time.
 
-Every card links to its original city event page. Data attribution follows the APIs' CC BY 4.0 terms. Event photographs are shown only when permitted license metadata and photographer attribution are available; `event_only` images are used only on their own event cards.
+Clicking a card opens its original event page in a new tab. Free events have a light green card background and paid events a light pink one. The bookmark button saves an event in this browser (localStorage); saved events are pinned to the top of the selected day within the current filters. Data attribution follows the APIs' CC BY 4.0 terms. Event photographs are shown only when permitted license metadata and photographer attribution are available; `event_only` images are used only on their own event cards.
 
 ## Failures and checks
 

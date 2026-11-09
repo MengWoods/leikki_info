@@ -19,6 +19,7 @@
       --ink:#f4f7f6; --muted:#c9d2ce; --green:#92e5c0; --tint:#2f4a42; --coral:#f2a78a;
       --accent:#2f8460; --on-accent:#fff; --star:#f4c463; --star-off:#555e66;
       --shadow:0 1px 2px #0003, 0 4px 14px #00000026; --warn-bg:#4f4038; --warn-ink:#f8d8c6;
+      --free-bg:#2c3f37; --paid-bg:#45343b; --paid-line:#6a4b57;
     }
     :root[data-theme="light"] {
       color-scheme: light;
@@ -26,6 +27,7 @@
       --ink:#1f2b27; --muted:#5a6762; --green:#17745b; --tint:#e5f2ec; --coral:#b94935;
       --accent:#17745b; --on-accent:#fff; --star:#e2a40b; --star-off:#d4dbd7;
       --shadow:0 1px 2px #1f2b2712, 0 4px 14px #1f2b270d; --warn-bg:#fff1e8; --warn-ink:#843623;
+      --free-bg:#ebf7f0; --paid-bg:#fdedf1; --paid-line:#f1c9d3;
     }
     * { box-sizing:border-box; }
     html { scroll-behavior:smooth; }
@@ -112,6 +114,18 @@
     .cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; align-items:start; }
     .card { background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden; min-width:0; box-shadow:var(--shadow); animation:arrive .25s ease-out both; transition:border-color .15s, transform .15s; }
     .card:hover { border-color:var(--green); }
+    .card[data-url] { cursor:pointer; }
+    .card.free { background:var(--free-bg); }
+    .card.paid { background:var(--paid-bg); border-color:var(--paid-line); }
+    .card.paid:hover { border-color:var(--coral); }
+    .card.saved { border-color:var(--star); box-shadow:var(--shadow), inset 0 0 0 1px var(--star); }
+    h3 a { color:inherit; text-decoration:none; }
+    .card:hover h3 a, h3 a:focus-visible { text-decoration:underline; text-decoration-color:var(--green); }
+    .card-actions { display:flex; align-items:center; gap:6px; }
+    .save { width:36px; height:36px; margin:-6px -8px -6px 0; display:grid; place-items:center; border:0; border-radius:999px; background:transparent; color:var(--muted); padding:0; }
+    .save:hover { background:var(--raised); color:var(--ink); }
+    .save[aria-pressed="true"] { color:var(--star); }
+    .save[aria-pressed="true"] svg { fill:currentColor; }
     .photo { width:100%; aspect-ratio:16/7; object-fit:cover; display:block; }
     .credit { font-size:10px; color:var(--muted); padding:3px 14px 0; margin:0; }
     .card-body { padding:16px 18px 14px; }
@@ -126,9 +140,9 @@
     .address { font-size:12px; color:var(--muted); margin:2px 0 0; overflow-wrap:anywhere; }
     .tags { display:flex; flex-wrap:wrap; gap:5px; margin:12px 0; }
     .tag { font-size:11px; border:1px solid var(--line); padding:2px 8px; border-radius:999px; color:var(--muted); }
-    .tag.free { background:var(--tint); color:var(--green); border-color:transparent; font-weight:700; }
+    .tag.free { background:var(--tint); color:var(--green); border-color:var(--green); font-weight:700; }
     .tag.caution { color:var(--coral); }
-    .tag.paid { background:var(--raised); color:var(--ink); border-color:transparent; font-weight:700; }
+    .tag.paid { background:var(--surface); color:var(--ink); border-color:var(--paid-line); font-weight:700; }
     .tag.city { color:var(--ink); }
     .dir-group h4 { margin:18px 0 0; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
     details { font-size:12px; color:var(--muted); }
@@ -137,8 +151,7 @@
     summary:hover { color:var(--ink); }
     details p { white-space:pre-line; overflow-wrap:anywhere; max-height:230px; overflow:auto; margin:8px 0; }
     details ul { padding-left:18px; margin:8px 0; }
-    .card-footer { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-top:1px solid var(--line); margin-top:14px; padding-top:12px; font-size:13px; }
-    .original { font-weight:700; }
+    .card-footer { display:flex; justify-content:flex-end; align-items:center; flex-wrap:wrap; gap:10px; border-top:1px solid var(--line); margin-top:14px; padding-top:12px; font-size:13px; }
     .empty { color:var(--muted); padding:28px 0; margin:0; font-size:14px; text-align:center; }
     .empty button { display:block; margin:12px auto 0; }
     .pager { display:flex; justify-content:space-between; gap:10px; margin-top:24px; }
@@ -274,7 +287,7 @@
         indoor:'Indoor', outdoor:'Outdoor',
         sort:'Order', bestFirst:'Recommended', timeFirst:'By time',
         activityType:'Activity type', allActivities:'All activities', movement:'Move & dance', play:'Play & meet', creative:'Make & explore', quiet:'Quiet moments',
-        activities:'activities', activity:'activity', free:'Free', original:'View original', register:'Registration',
+        activities:'activities', activity:'activity', free:'Free', register:'Registration', save:'Save', unsave:'Remove from saved',
         ages:'Ages', allAge:'All ages', unspecifiedAge:'Age not given', outdated:'Outdated', photo:'Photo', finnishText:'Original title',
         moreInfo:'Event details', language:'Event language', notGiven:'Not specified',
         rating:'Recommendation', starsOf:'{n} out of 5 stars', whyRating:'Why this rating?',
@@ -282,7 +295,7 @@
         freeSource:'Free of charge', pricedOffer:'Price stated up front', knownAge:'Age guidance provided', duration:'30-120 minute session', dropIn:'No advance registration needed', knownVenue:'Named venue',
         noEvents:'No published free activities found for this day.', noResults:'No matches with these filters.',
         prevDay:'Previous day', nextDay:'Next day', backTop:'Back to top',
-        check:'Check the original page before leaving. Unspecified ages and prices are flagged.',
+        check:'Tap a card to open its original page. Check it before leaving. Unspecified ages and prices are flagged.',
         more:'More places and calendars', directoryNote:'Links only: these are not verified sessions for the dates shown. Check opening hours and prices on each site.',
         footer:'Families in Espoo, Helsinki and Vantaa, ages 0-8. Updated daily.', attribution:'Event data:', updated:'Last updated',
         stale:'This snapshot has not been updated recently. Check the original sources.', failed:'Some sources could not be updated. Retained listings are marked outdated.',
@@ -302,7 +315,7 @@
         indoor:'Sisällä', outdoor:'Ulkona',
         sort:'Järjestys', bestFirst:'Suositellut', timeFirst:'Aikajärjestys',
         activityType:'Tekemisen tyyppi', allActivities:'Kaikki tekeminen', movement:'Liiku ja tanssi', play:'Leiki ja tapaa', creative:'Luo ja tutki', quiet:'Rauhalliset hetket',
-        activities:'tapahtumaa', activity:'tapahtuma', free:'Maksuton', original:'Katso alkuperäinen', register:'Ilmoittautuminen',
+        activities:'tapahtumaa', activity:'tapahtuma', free:'Maksuton', register:'Ilmoittautuminen', save:'Tallenna', unsave:'Poista tallennetuista',
         ages:'Ikä', allAge:'Ei ikärajaa', unspecifiedAge:'Ikää ei ilmoitettu', outdated:'Vanhentunut', photo:'Kuva', finnishText:'Alkuperäinen nimi',
         moreInfo:'Tapahtuman tiedot', language:'Tapahtuman kieli', notGiven:'Ei ilmoitettu',
         rating:'Suositus', starsOf:'{n} / 5 tähteä', whyRating:'Mistä arvio tulee?',
@@ -310,7 +323,7 @@
         freeSource:'Maksuton', pricedOffer:'Hinta ilmoitettu etukäteen', knownAge:'Ikätiedot ilmoitettu', duration:'30-120 minuutin tapahtuma', dropIn:'Ennakkoilmoittautumista ei tarvita', knownVenue:'Tapahtumapaikka ilmoitettu',
         noEvents:'Tälle päivälle ei löytynyt julkaistuja maksuttomia tapahtumia.', noResults:'Ei tuloksia näillä suodattimilla.',
         prevDay:'Edellinen päivä', nextDay:'Seuraava päivä', backTop:'Takaisin ylös',
-        check:'Tarkista alkuperäinen sivu ennen lähtöä. Puuttuvat ikä- ja hintatiedot merkitään.',
+        check:'Napauta korttia avataksesi alkuperäisen sivun. Tarkista se ennen lähtöä. Puuttuvat ikä- ja hintatiedot merkitään.',
         more:'Lisää paikkoja ja kalentereita', directoryNote:'Vain linkkejä: nämä eivät ole vahvistettuja tapahtumia näytetyille päiville. Tarkista aukioloajat ja hinnat sivuilta.',
         footer:'Espoon, Helsingin ja Vantaan perheille, 0-8-vuotiaille. Päivitetään päivittäin.', attribution:'Tapahtumatiedot:', updated:'Päivitetty',
         stale:'Tietoja ei ole päivitetty äskettäin. Tarkista alkuperäiset lähteet.', failed:'Kaikkia lähteitä ei voitu päivittää. Säilytetyt tapahtumat on merkitty vanhentuneiksi.',
@@ -344,6 +357,8 @@
     let language = store.get('leikki-language') === 'fi' ? 'fi' : 'en';
     let theme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
     let data = null, loadFailed = false, category = 'all', selectedDate = null;
+    const bookmarks = new Set((() => { try { const v = JSON.parse(store.get('leikki-saved') || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; } })());
+    const saveBookmarks = () => store.set('leikki-saved', JSON.stringify([...bookmarks]));
     const saved = { age:store.get('leikki-age'), city:store.get('leikki-city'), price:store.get('leikki-price') };
 
     const get = id => document.getElementById(id);
@@ -484,14 +499,17 @@
       const priceTag = pr.status === 'free' ? `<span class="tag free">${escape(t('free'))}</span>`
         : pr.status === 'paid' ? `<span class="tag paid" title="${escape(priceText)}">${escape(pr.note === 'admission' ? t('admission') : priceText.length && priceText.length <= 28 ? priceText : t('paid'))}</span>`
         : `<span class="tag caution">${escape(t('priceUnknown'))}</span>`;
-      return `<article class="card">${photo}<div class="card-body">
-        <div class="card-top"><span class="time">${escape(hm(a.start))}${sameDayEnd ? ` – ${escape(hm(a.end))}` : ''}${duration ? `<small>${escape(duration)}</small>` : ''}</span>${stars(a.score.value)}</div>
-        <h3 lang="${titleLang}">${escape(text(a.title))}</h3>${language !== titleLang ? `<small class="orig-note">${escape(t('finnishText'))}</small>` : ''}
+      const url = a.sourceUrls[language] || a.sourceUrls.fi || a.sourceUrls.en;
+      const isSaved = bookmarks.has(a.id);
+      const extra = a.registrationUrl ? link(a.registrationUrl, t('register')) : pr.url ? link(pr.url, t('tickets')) : '';
+      return `<article class="card ${pr.status === 'free' ? 'free' : pr.status === 'paid' ? 'paid' : ''}${isSaved ? ' saved' : ''}"${url ? ` data-url="${escape(url)}"` : ''}>${photo}<div class="card-body">
+        <div class="card-top"><span class="time">${escape(hm(a.start))}${sameDayEnd ? ` – ${escape(hm(a.end))}` : ''}${duration ? `<small>${escape(duration)}</small>` : ''}</span><span class="card-actions">${stars(a.score.value)}<button type="button" class="save" data-save="${escape(a.id)}" aria-pressed="${isSaved}" aria-label="${escape(t(isSaved ? 'unsave' : 'save'))}" title="${escape(t(isSaved ? 'unsave' : 'save'))}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg></button></span></div>
+        <h3 lang="${titleLang}">${url ? link(url, text(a.title)) : escape(text(a.title))}</h3>${language !== titleLang ? `<small class="orig-note">${escape(t('finnishText'))}</small>` : ''}
         <p class="venue">${escape(text(a.venue))}</p><p class="address">${escape(text(a.address))}</p>
         <div class="tags">${priceTag}<span class="tag city">${escape(t(a.city + 'City'))}</span><span class="tag">${escape(t(a.category))}</span><span class="tag${a.ages.confirmed ? '' : ' caution'}">${escape(ageLabel(a.ages))}</span>${a.environment !== 'unknown' ? `<span class="tag">${escape(t(a.environment))}</span>` : ''}${a.stale ? `<span class="tag caution">${escape(t('outdated'))}</span>` : ''}</div>
         <details><summary>${escape(t('moreInfo'))}</summary>${description ? `<p lang="${descLang}">${escape(description)}</p>` : ''}<p>${escape(t('language'))}: ${escape(a.languages.length ? a.languages.join(', ').toUpperCase() : t('notGiven'))}${pr.status === 'paid' && priceText ? `<br>${escape(t('priceLabel'))}: ${escape(priceText)}` : ''}</p></details>
         <details><summary>${escape(t('whyRating'))}</summary><ul>${a.score.reasons.map(r => `<li>+${r.points}: ${escape(t(r.key))}</li>`).join('')}</ul><p>${escape(t('ratingNote'))}</p></details>
-        <div class="card-footer">${link(a.sourceUrls[language] || a.sourceUrls.fi || a.sourceUrls.en, t('original') + ' ↗', 'original')}${a.registrationUrl ? link(a.registrationUrl, t('register')) : pr.url ? link(pr.url, t('tickets')) : ''}</div>
+        ${extra ? `<div class="card-footer">${extra}</div>` : ''}
       </div></article>`;
     }
 
@@ -560,7 +578,7 @@
       // Results for selected day
       if (!selectedDate) { get('results').innerHTML = `<p class="empty">${escape(t('noEvents'))}</p>`; return; }
       const day = filtered.filter(a => a.date === selectedDate)
-        .sort((x, y) => (get('sort').value === 'score' ? y.score.value - x.score.value : 0) || x.start.localeCompare(y.start));
+        .sort((x, y) => (bookmarks.has(y.id) - bookmarks.has(x.id)) || (get('sort').value === 'score' ? y.score.value - x.score.value : 0) || x.start.localeCompare(y.start));
       const anyThatDay = data.activities.some(a => a.date === selectedDate);
       const idx = visibleDays.indexOf(selectedDate);
       const prev = visibleDays[idx - 1], next = visibleDays[idx + 1];
@@ -592,6 +610,8 @@
         const payload = await response.json();
         if (payload.schemaVersion !== 3 || payload.week?.days?.length < 8 || payload.week.days.length > 14 || !Array.isArray(payload.activities)) throw new Error('Invalid snapshot');
         data = payload;
+        const ids = new Set(payload.activities.map(a => a.id));
+        bookmarks.forEach(id => { if (!ids.has(id)) bookmarks.delete(id); }); saveBookmarks();
         const hash = location.hash.slice(1);
         if (/^\d{4}-\d{2}-\d{2}$/.test(hash)) selectedDate = hash;
       } catch { loadFailed = true; }
@@ -613,7 +633,17 @@
     });
     get('results').addEventListener('click', e => {
       const go = e.target.closest('[data-go]'); if (go) return selectDay(go.dataset.go);
-      if (e.target.closest('[data-reset]')) resetFilters();
+      if (e.target.closest('[data-reset]')) return resetFilters();
+      const save = e.target.closest('[data-save]');
+      if (save) {
+        const id = save.dataset.save;
+        bookmarks.has(id) ? bookmarks.delete(id) : bookmarks.add(id);
+        saveBookmarks(); render();
+        return [...get('results').querySelectorAll('[data-save]')].find(b => b.dataset.save === id)?.focus({ preventScroll:true });
+      }
+      const c = e.target.closest('.card[data-url]');
+      if (!c || e.target.closest('a,button,details,input,select') || String(getSelection?.() ?? '')) return;
+      window.open(c.dataset.url, '_blank', 'noopener,noreferrer');
     });
     const backTop = get('back-top');
     backTop.addEventListener('click', () => window.scrollTo({ top:0 }));
