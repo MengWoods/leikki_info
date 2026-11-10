@@ -279,7 +279,7 @@
     <div class="wrap">
       <div class="days" id="days" role="tablist" aria-label="Days"></div>
       <div class="filters" id="filters" role="group" aria-label="Filters">
-        <div class="pill"><select id="age" hidden data-label="age"></select></div>
+        <div class="pill"><select id="age" hidden multiple data-label="age"></select></div>
         <div class="pill"><select id="city" hidden multiple data-label="city"></select></div>
         <div class="time-toggles" id="times" role="group"></div>
         <div class="pill"><select id="price" hidden data-label="priceLabel"></select></div>
@@ -316,7 +316,7 @@
         toDay:'Switch to day mode', toDark:'Switch to dark mode', today:'Today', nextWeek:'Next week', days:'Days',
         filters:'Filters', reset:'Clear',
         age:"Child's age", anyAge:'Any age', ageUnder1:'Under 1 year', ageYear:'{n} year', ageYears:'{n} years',
-        city:'City', allCities:'All cities', espooCity:'Espoo', helsinkiCity:'Helsinki', vantaaCity:'Vantaa',
+        city:'City', allCities:'All cities', agesPicked:'Ages {n}', espooCity:'Espoo', helsinkiCity:'Helsinki', vantaaCity:'Vantaa',
         priceLabel:'Price', anyPrice:'Any price', freeOnly:'Free', paidOnly:'Paid', paid:'Paid', admission:'Admission fee', priceUnknown:'Price: check source', tickets:'Tickets & prices',
         indoor:'Indoor', outdoor:'Outdoor',
         sort:'Order', bestFirst:'Recommended', timeFirst:'By time',
@@ -347,7 +347,7 @@
         toDay:'Vaihda vaaleaan tilaan', toDark:'Vaihda tummaan tilaan', today:'Tänään', nextWeek:'Ensi viikko', days:'Päivät',
         filters:'Suodattimet', reset:'Tyhjennä',
         age:'Lapsen ikä', anyAge:'Kaikki iät', ageUnder1:'Alle 1 vuotta', ageYear:'{n} vuosi', ageYears:'{n} vuotta',
-        city:'Kaupunki', allCities:'Kaikki kaupungit', espooCity:'Espoo', helsinkiCity:'Helsinki', vantaaCity:'Vantaa',
+        city:'Kaupunki', allCities:'Kaikki kaupungit', agesPicked:'Ikä {n}', espooCity:'Espoo', helsinkiCity:'Helsinki', vantaaCity:'Vantaa',
         priceLabel:'Hinta', anyPrice:'Kaikki hinnat', freeOnly:'Maksuttomat', paidOnly:'Maksulliset', paid:'Maksullinen', admission:'Pääsymaksu', priceUnknown:'Hinta: tarkista lähde', tickets:'Liput ja hinnat',
         indoor:'Sisällä', outdoor:'Ulkona',
         sort:'Järjestys', bestFirst:'Suositellut', timeFirst:'Aikajärjestys',
@@ -418,11 +418,17 @@
       evening: icon('<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>')
     };
     const saveTimes = () => store.set('leikki-time', JSON.stringify([...times]));
-    const saved = { age:store.get('leikki-age'), price:store.get('leikki-price') };
-    // Cities: multi-select; empty set = all. Older saves stored a single city string.
-    const cities = (() => { const raw = store.get('leikki-city'); try { const v = JSON.parse(raw); if (Array.isArray(v)) return new Set(v.filter(c => cityKeys.includes(c))); } catch {} return new Set(cityKeys.includes(raw) ? [raw] : []); })();
-    const saveCities = () => store.set('leikki-city', JSON.stringify([...cities]));
-    const syncCitySelect = () => [...get('city').options].forEach(o => { o.selected = o.value === 'all' ? cities.size === 0 : cities.has(o.value); });
+    const saved = { price:store.get('leikki-price') };
+    // Multi-select filters (city, age): empty set = all. Older saves stored a single value string.
+    const ageKeys = Array.from({length:9}, (_, n) => String(n));
+    const loadMulti = (key, keys) => { const raw = store.get(key); try { const v = JSON.parse(raw); if (Array.isArray(v)) return new Set(v.map(String).filter(x => keys.includes(x))); } catch {} return new Set(keys.includes(raw) ? [raw] : []); };
+    const multi = {
+      city: { keys:cityKeys, set:loadMulti('leikki-city', cityKeys) },
+      age:  { keys:ageKeys,  set:loadMulti('leikki-age', ageKeys) }
+    };
+    const cities = multi.city.set, ages = multi.age.set;
+    const saveMulti = id => store.set('leikki-' + id, JSON.stringify([...multi[id].set]));
+    const syncMultiSelect = id => [...get(id).options].forEach(o => { o.selected = o.value === 'all' ? multi[id].set.size === 0 : multi[id].set.has(o.value); });
 
     const get = id => document.getElementById(id);
     const t = (key, n) => (copy[language][key] ?? copy.en[key] ?? key).replace('{n}', n);
@@ -503,7 +509,8 @@
     function syncDropdowns() {
       document.querySelectorAll('select[data-label]').forEach(select => {
         const btn = select.ddButton; if (!btn) return;
-        const value = [...select.selectedOptions].map(o => o.textContent).join(', ');
+        const picked = [...select.selectedOptions];
+        const value = select.id === 'age' && picked.length > 1 ? t('agesPicked', picked.map(o => o.value === '0' ? '<1' : o.value).join(', ')) : picked.map(o => o.textContent).join(', ');
         btn.innerHTML = (pillIcons[select.id] ? icon(pillIcons[select.id]) : '') + `<span class="val">${escape(value)}</span>`;
         btn.setAttribute('aria-label', `${t(select.dataset.label)}: ${value}`);
         btn.title = btn.getAttribute('aria-label');
@@ -514,16 +521,15 @@
     /* ---------- Static controls (rebuilt on language change) ---------- */
     function buildControls() {
       const keep = id => get(id).value;
-      const age = keep('age') || saved.age || 'all', price = keep('price') || saved.price || 'all'
+      const price = keep('price') || saved.price || 'all'
         , sort = keep('sort') || 'score';
       get('age').innerHTML = `<option value="all">${escape(t('anyAge'))}</option>` + Array.from({length:9}, (_, n) =>
         `<option value="${n}">${escape(n === 0 ? t('ageUnder1') : t(n === 1 ? 'ageYear' : 'ageYears', n))}</option>`).join('');
       get('city').innerHTML = `<option value="all">${escape(t('allCities'))}</option>` + cityKeys.map(c => `<option value="${c}">${escape(t(c + 'City'))}</option>`).join('');
       get('price').innerHTML = [['all','anyPrice'],['free','freeOnly'],['paid','paidOnly']].map(([v,k]) => `<option value="${v}">${escape(t(k))}</option>`).join('');
-      syncCitySelect();
+      syncMultiSelect('city'); syncMultiSelect('age');
       get('price').value = ['free','paid'].includes(price) ? price : 'all';
       get('sort').innerHTML = `<option value="score">${escape(t('bestFirst'))}</option><option value="time">${escape(t('timeFirst'))}</option>`;
-      get('age').value = [...get('age').options].some(o => o.value === age) ? age : 'all';
       get('sort').value = sort;
       get('days').setAttribute('aria-label', t('days'));
       document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -591,16 +597,17 @@
       return h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
     }
     function matchesFilters(a, { ignoreCategory = false, ignoreTime = false } = {}) {
-      const price = get('price').value, age = get('age').value;
+      const price = get('price').value;
       return (cities.size === 0 || cities.has(a.city))
         && (price === 'all' || (a.price?.status ?? 'free') === price)
         && (ignoreCategory || category === 'all' || a.category === category)
         && (ignoreTime || times.size === 0 || times.has(slotOf(a)))
-        && (age === 'all' || ((a.ages.min === null || a.ages.min <= +age) && (a.ages.max === null || a.ages.max >= +age)));
+        && (ages.size === 0 || [...ages].some(n => (a.ages.min === null || a.ages.min <= +n) && (a.ages.max === null || a.ages.max >= +n)));
     }
-    const activeFilterCount = () => ['price','age'].filter(id => get(id).value !== 'all').length + (cities.size > 0) + (category !== 'all') + (times.size > 0);
+    const activeFilterCount = () => (get('price').value !== 'all') + (cities.size > 0) + (ages.size > 0) + (category !== 'all') + (times.size > 0);
     function resetFilters() {
-      ['price','age'].forEach(id => { get(id).value = 'all'; store.set('leikki-' + id, 'all'); }); cities.clear(); saveCities(); syncCitySelect(); category = 'all'; times.clear(); saveTimes(); render();
+      get('price').value = 'all'; store.set('leikki-price', 'all');
+      Object.keys(multi).forEach(id => { multi[id].set.clear(); saveMulti(id); syncMultiSelect(id); }); category = 'all'; times.clear(); saveTimes(); render();
     }
 
     /* ---------- Render ---------- */
@@ -655,8 +662,8 @@
         return `<option value="${c}">${escape(t(c === 'all' ? 'allActivities' : c))} (${count})</option>`;
       }).join('');
       get('category').value = category;
-      ['age','category','price'].forEach(id => get(id).parentElement.classList.toggle('on', get(id).value !== 'all'));
-      get('city').parentElement.classList.toggle('on', cities.size > 0);
+      ['category','price'].forEach(id => get(id).parentElement.classList.toggle('on', get(id).value !== 'all'));
+      Object.keys(multi).forEach(id => get(id).parentElement.classList.toggle('on', multi[id].set.size > 0));
       get('sort').parentElement.classList.toggle('on', get('sort').value !== 'score');
       const n = activeFilterCount();
       get('reset').hidden = !n;
@@ -720,12 +727,12 @@
       saveTimes(); render();
       get('times').querySelector(`[data-time="${s}"]`)?.focus({ preventScroll:true });
     });
-    get('city').addEventListener('pick', e => {
-      const c = e.detail;
-      if (c === 'all') cities.clear(); else { cities.has(c) ? cities.delete(c) : cities.add(c); if (cities.size === cityKeys.length) cities.clear(); }
-      saveCities(); syncCitySelect(); render();
-    });
-    ['age','price'].forEach(id => get(id).addEventListener('change', e => { store.set('leikki-' + id, e.target.value); render(); }));
+    Object.entries(multi).forEach(([id, { keys, set }]) => get(id).addEventListener('pick', e => {
+      const v = e.detail;
+      if (v === 'all') set.clear(); else { set.has(v) ? set.delete(v) : set.add(v); if (set.size === keys.length) set.clear(); }
+      saveMulti(id); syncMultiSelect(id); render();
+    }));
+    ['price'].forEach(id => get(id).addEventListener('change', e => { store.set('leikki-' + id, e.target.value); render(); }));
     get('days').addEventListener('click', e => { const b = e.target.closest('[data-date]'); if (b) selectDay(b.dataset.date); });
     get('days').addEventListener('keydown', e => {
       const i = visibleDays.indexOf(selectedDate);
