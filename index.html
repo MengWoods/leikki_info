@@ -90,6 +90,13 @@
     .pill.on::after { color:var(--green); }
     .pill.sort { margin-left:auto; }
     .pill.sort .dd-btn { background:transparent; }
+    .time-toggles { display:flex; gap:6px; flex:0 0 auto; }
+    .time-chip { flex:0 0 auto; background:var(--field); border:1px solid var(--line); border-radius:999px; padding:7px 14px; min-height:38px; font:inherit; font-size:14px; font-weight:600; color:var(--ink); cursor:pointer; white-space:nowrap; }
+    .time-chip:hover { border-color:var(--muted); }
+    .time-chip .n { font-weight:500; color:var(--muted); margin-left:4px; }
+    .time-chip.zero:not([aria-pressed="true"]) { opacity:.55; }
+    .time-chip[aria-pressed="true"] { background:var(--tint); border-color:var(--green); color:var(--green); }
+    .time-chip[aria-pressed="true"] .n { color:var(--green); }
     .reset { flex:0 0 auto; background:none; border:0; color:var(--green); text-decoration:underline; text-underline-offset:3px; font-size:13px; font-weight:600; padding:6px 4px; }
 
     .dd-btn { white-space:nowrap; cursor:pointer; }
@@ -122,6 +129,16 @@
     h3 a { color:inherit; text-decoration:none; }
     .card:hover h3 a, h3 a:focus-visible { text-decoration:underline; text-decoration-color:var(--green); }
     .card-actions { display:flex; align-items:center; gap:6px; }
+    .dislike { width:36px; height:36px; margin:-6px 0; display:grid; place-items:center; border:0; border-radius:999px; background:transparent; color:var(--muted); padding:0; }
+    .dislike:hover { background:var(--raised); color:var(--ink); }
+    .dislike[aria-pressed="true"] { color:var(--coral); }
+    .dislike[aria-pressed="true"] svg { fill:currentColor; }
+    .card.disliked { opacity:.6; }
+    .card.disliked:hover { opacity:1; }
+    .disliked-section { margin-top:24px; border-top:1px solid var(--line); padding-top:6px; }
+    .disliked-section > summary { cursor:pointer; padding:10px 0; font-size:14px; font-weight:600; color:var(--muted); }
+    .disliked-section > summary:hover { color:var(--ink); }
+    .disliked-section .cards { margin-top:6px; }
     .save { width:36px; height:36px; margin:-6px -8px -6px 0; display:grid; place-items:center; border:0; border-radius:999px; background:transparent; color:var(--muted); padding:0; }
     .save:hover { background:var(--raised); color:var(--ink); }
     .save[aria-pressed="true"] { color:var(--star); }
@@ -200,6 +217,7 @@
       .pill .dd-btn { min-height:34px; padding:5px 28px 5px 12px; font-size:13px; }
       .pill::after { right:11px; }
       .pill.sort { margin-left:0; }
+      .time-chip { min-height:34px; padding:5px 12px; font-size:13px; }
       .filters, .days { -webkit-mask-image:linear-gradient(to right,#000 88%,transparent); mask-image:linear-gradient(to right,#000 88%,transparent); }
       .filters::after { content:''; flex:0 0 24px; }
       .day-heading { padding:14px 0 10px; }
@@ -250,6 +268,7 @@
         <div class="pill"><select id="city" hidden data-label="city"></select></div>
         <div class="pill"><select id="price" hidden data-label="priceLabel"></select></div>
         <div class="pill"><select id="category" hidden data-label="activityType"></select></div>
+        <div class="time-toggles" id="times" role="group"></div>
         <button type="button" class="reset" id="reset" hidden data-i18n="reset">Clear</button>
         <div class="pill sort"><select id="sort" hidden data-label="sort"></select></div>
       </div>
@@ -288,6 +307,9 @@
         sort:'Order', bestFirst:'Recommended', timeFirst:'By time',
         activityType:'Activity type', allActivities:'All activities', movement:'Move & dance', play:'Play & meet', creative:'Make & explore', quiet:'Quiet moments',
         activities:'activities', activity:'activity', free:'Free', register:'Registration', save:'Save', unsave:'Remove from saved',
+        dislike:'Not interested', undislike:'Undo not interested', dislikedSection:'Not interested ({n})',
+        timeOfDay:'Time of day', morning:'Morning', afternoon:'Afternoon', evening:'Evening',
+        morningHours:'Starts before 12:00', afternoonHours:'Starts 12:00–17:00', eveningHours:'Starts 17:00 or later',
         ages:'Ages', allAge:'All ages', unspecifiedAge:'Age not given', outdated:'Outdated', photo:'Photo', finnishText:'Original title',
         moreInfo:'Event details', language:'Event language', notGiven:'Not specified',
         rating:'Recommendation', starsOf:'{n} out of 5 stars', whyRating:'Why this rating?',
@@ -316,6 +338,9 @@
         sort:'Järjestys', bestFirst:'Suositellut', timeFirst:'Aikajärjestys',
         activityType:'Tekemisen tyyppi', allActivities:'Kaikki tekeminen', movement:'Liiku ja tanssi', play:'Leiki ja tapaa', creative:'Luo ja tutki', quiet:'Rauhalliset hetket',
         activities:'tapahtumaa', activity:'tapahtuma', free:'Maksuton', register:'Ilmoittautuminen', save:'Tallenna', unsave:'Poista tallennetuista',
+        dislike:'Ei kiinnosta', undislike:'Peru ei kiinnosta', dislikedSection:'Ei kiinnosta ({n})',
+        timeOfDay:'Kellonaika', morning:'Aamupäivä', afternoon:'Iltapäivä', evening:'Ilta',
+        morningHours:'Alkaa ennen klo 12', afternoonHours:'Alkaa klo 12–17', eveningHours:'Alkaa klo 17 tai myöhemmin',
         ages:'Ikä', allAge:'Ei ikärajaa', unspecifiedAge:'Ikää ei ilmoitettu', outdated:'Vanhentunut', photo:'Kuva', finnishText:'Alkuperäinen nimi',
         moreInfo:'Tapahtuman tiedot', language:'Tapahtuman kieli', notGiven:'Ei ilmoitettu',
         rating:'Suositus', starsOf:'{n} / 5 tähteä', whyRating:'Mistä arvio tulee?',
@@ -359,6 +384,12 @@
     let data = null, loadFailed = false, category = 'all', selectedDate = null;
     const bookmarks = new Set((() => { try { const v = JSON.parse(store.get('leikki-saved') || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; } })());
     const saveBookmarks = () => store.set('leikki-saved', JSON.stringify([...bookmarks]));
+    const loadSet = (key, allowed) => new Set((() => { try { const v = JSON.parse(store.get(key) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string' && (!allowed || allowed.includes(x))) : []; } catch { return []; } })());
+    const dislikes = loadSet('leikki-disliked');
+    const saveDislikes = () => store.set('leikki-disliked', JSON.stringify([...dislikes]));
+    const slots = ['morning','afternoon','evening'];
+    const times = loadSet('leikki-time', slots);
+    const saveTimes = () => store.set('leikki-time', JSON.stringify([...times]));
     const saved = { age:store.get('leikki-age'), city:store.get('leikki-city'), price:store.get('leikki-price') };
 
     const get = id => document.getElementById(id);
@@ -500,10 +531,10 @@
         : pr.status === 'paid' ? `<span class="tag paid" title="${escape(priceText)}">${escape(pr.note === 'admission' ? t('admission') : priceText.length && priceText.length <= 28 ? priceText : t('paid'))}</span>`
         : `<span class="tag caution">${escape(t('priceUnknown'))}</span>`;
       const url = a.sourceUrls[language] || a.sourceUrls.fi || a.sourceUrls.en;
-      const isSaved = bookmarks.has(a.id);
+      const isSaved = bookmarks.has(a.id), isDisliked = dislikes.has(a.id);
       const extra = a.registrationUrl ? link(a.registrationUrl, t('register')) : pr.url ? link(pr.url, t('tickets')) : '';
-      return `<article class="card ${pr.status === 'free' ? 'free' : pr.status === 'paid' ? 'paid' : ''}${isSaved ? ' saved' : ''}"${url ? ` data-url="${escape(url)}"` : ''}>${photo}<div class="card-body">
-        <div class="card-top"><span class="time">${escape(hm(a.start))}${sameDayEnd ? ` – ${escape(hm(a.end))}` : ''}${duration ? `<small>${escape(duration)}</small>` : ''}</span><span class="card-actions">${stars(a.score.value)}<button type="button" class="save" data-save="${escape(a.id)}" aria-pressed="${isSaved}" aria-label="${escape(t(isSaved ? 'unsave' : 'save'))}" title="${escape(t(isSaved ? 'unsave' : 'save'))}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg></button></span></div>
+      return `<article class="card ${pr.status === 'free' ? 'free' : pr.status === 'paid' ? 'paid' : ''}${isSaved ? ' saved' : ''}${isDisliked ? ' disliked' : ''}"${url ? ` data-url="${escape(url)}"` : ''}>${photo}<div class="card-body">
+        <div class="card-top"><span class="time">${escape(hm(a.start))}${sameDayEnd ? ` – ${escape(hm(a.end))}` : ''}${duration ? `<small>${escape(duration)}</small>` : ''}</span><span class="card-actions">${stars(a.score.value)}<button type="button" class="dislike" data-dislike="${escape(a.id)}" aria-pressed="${isDisliked}" aria-label="${escape(t(isDisliked ? 'undislike' : 'dislike'))}" title="${escape(t(isDisliked ? 'undislike' : 'dislike'))}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M17 14V3H7.5a2 2 0 0 0-2 1.6l-1.4 7A2 2 0 0 0 6 14h4.5l-1 4.4A2 2 0 0 0 11.4 21L17 14z"/><path d="M17 3h3v11h-3"/></svg></button><button type="button" class="save" data-save="${escape(a.id)}" aria-pressed="${isSaved}" aria-label="${escape(t(isSaved ? 'unsave' : 'save'))}" title="${escape(t(isSaved ? 'unsave' : 'save'))}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg></button></span></div>
         <h3 lang="${titleLang}">${url ? link(url, text(a.title)) : escape(text(a.title))}</h3>${language !== titleLang ? `<small class="orig-note">${escape(t('finnishText'))}</small>` : ''}
         <p class="venue">${escape(text(a.venue))}</p><p class="address">${escape(text(a.address))}</p>
         <div class="tags">${priceTag}<span class="tag city">${escape(t(a.city + 'City'))}</span><span class="tag">${escape(t(a.category))}</span><span class="tag${a.ages.confirmed ? '' : ' caution'}">${escape(ageLabel(a.ages))}</span>${a.environment !== 'unknown' ? `<span class="tag">${escape(t(a.environment))}</span>` : ''}${a.stale ? `<span class="tag caution">${escape(t('outdated'))}</span>` : ''}</div>
@@ -514,20 +545,26 @@
     }
 
     /* ---------- Filtering ---------- */
-    function matchesFilters(a, { ignoreCategory = false } = {}) {
+    // Time-of-day bucket by start hour in Helsinki time
+    function slotOf(a) {
+      const h = Number(new Intl.DateTimeFormat('en-GB', { timeZone:'Europe/Helsinki', hour:'2-digit', hourCycle:'h23' }).format(new Date(a.start)));
+      return h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+    }
+    function matchesFilters(a, { ignoreCategory = false, ignoreTime = false } = {}) {
       const city = get('city').value, price = get('price').value, age = get('age').value;
       return (city === 'all' || a.city === city)
         && (price === 'all' || (a.price?.status ?? 'free') === price)
         && (ignoreCategory || category === 'all' || a.category === category)
+        && (ignoreTime || times.size === 0 || times.has(slotOf(a)))
         && (age === 'all' || ((a.ages.min === null || a.ages.min <= +age) && (a.ages.max === null || a.ages.max >= +age)));
     }
-    const activeFilterCount = () => ['city','price','age'].filter(id => get(id).value !== 'all').length + (category !== 'all');
+    const activeFilterCount = () => ['city','price','age'].filter(id => get(id).value !== 'all').length + (category !== 'all') + (times.size > 0);
     function resetFilters() {
-      ['city','price','age'].forEach(id => { get(id).value = 'all'; store.set('leikki-' + id, 'all'); }); category = 'all'; render();
+      ['city','price','age'].forEach(id => { get(id).value = 'all'; store.set('leikki-' + id, 'all'); }); category = 'all'; times.clear(); saveTimes(); render();
     }
 
     /* ---------- Render ---------- */
-    let visibleDays = [];
+    let visibleDays = [], dislikedOpen = false;
     function render() { renderView(); syncDropdowns(); }
     function renderView() {
       if (!data) {
@@ -554,7 +591,7 @@
 
       // Day tabs
       get('days').innerHTML = visibleDays.map(date => {
-        const count = filtered.filter(a => a.date === date).length;
+        const count = filtered.filter(a => a.date === date && !dislikes.has(a.id)).length;
         const divider = date === nextMondayISO && date !== visibleDays[0] ? `<div class="week-divider" aria-hidden="true"><span>${escape(t('nextWeek'))}</span></div>` : '';
         const selected = date === selectedDate;
         return `${divider}<button type="button" role="tab" class="day-tab${count ? '' : ' empty-day'}" data-date="${date}" aria-selected="${selected}" tabindex="${selected ? 0 : -1}" aria-controls="results">
@@ -565,7 +602,14 @@
       if (tab) { const strip = get('days'); const left = tab.offsetLeft, right = left + tab.offsetWidth; if (left < strip.scrollLeft || right > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = left - (strip.clientWidth - tab.offsetWidth) / 2; }
 
       // Activity-type options with counts for the selected day
-      const dayAll = data.activities.filter(a => a.date === selectedDate && matchesFilters(a, { ignoreCategory:true }));
+      const dayAll = data.activities.filter(a => a.date === selectedDate && !dislikes.has(a.id) && matchesFilters(a, { ignoreCategory:true }));
+      // Time-of-day chips with counts for the selected day
+      const dayAnyTime = data.activities.filter(a => a.date === selectedDate && !dislikes.has(a.id) && matchesFilters(a, { ignoreTime:true }));
+      get('times').setAttribute('aria-label', t('timeOfDay'));
+      get('times').innerHTML = slots.map(s => {
+        const count = dayAnyTime.filter(a => slotOf(a) === s).length;
+        return `<button type="button" class="time-chip${count ? '' : ' zero'}" data-time="${s}" aria-pressed="${times.has(s)}" title="${escape(t(s + 'Hours'))}">${escape(t(s))}<span class="n">${count}</span></button>`;
+      }).join('');
       get('category').innerHTML = categories.map(c => {
         const count = c === 'all' ? dayAll.length : dayAll.filter(a => a.category === c).length;
         return `<option value="${c}">${escape(t(c === 'all' ? 'allActivities' : c))} (${count})</option>`;
@@ -577,14 +621,16 @@
 
       // Results for selected day
       if (!selectedDate) { get('results').innerHTML = `<p class="empty">${escape(t('noEvents'))}</p>`; return; }
-      const day = filtered.filter(a => a.date === selectedDate)
+      const all = filtered.filter(a => a.date === selectedDate)
         .sort((x, y) => (bookmarks.has(y.id) - bookmarks.has(x.id)) || (get('sort').value === 'score' ? y.score.value - x.score.value : 0) || x.start.localeCompare(y.start));
+      const day = all.filter(a => !dislikes.has(a.id)), hidden = all.filter(a => dislikes.has(a.id));
       const anyThatDay = data.activities.some(a => a.date === selectedDate);
       const idx = visibleDays.indexOf(selectedDate);
       const prev = visibleDays[idx - 1], next = visibleDays[idx + 1];
       get('results').innerHTML = `<div class="day-heading"><h2>${escape(format(noon(selectedDate),{weekday:'long',day:'numeric',month:'long'}))}</h2><span class="meta">${day.length} ${escape(t(day.length === 1 ? 'activity' : 'activities'))}</span></div>`
         + (day.length ? `<div class="cards">${day.map(card).join('')}</div>`
           : `<div class="empty"><p>${escape(t(anyThatDay ? 'noResults' : 'noEvents'))}</p>${anyThatDay && n ? `<button type="button" class="btn" data-reset>${escape(t('reset'))}</button>` : ''}</div>`)
+        + (hidden.length ? `<details class="disliked-section"${dislikedOpen ? ' open' : ''}><summary>${escape(t('dislikedSection', hidden.length))}</summary><div class="cards">${hidden.map(card).join('')}</div></details>` : '')
         + `<nav class="pager" aria-label="${escape(t('days'))}">${prev ? `<button type="button" class="btn" data-go="${prev}">← ${escape(format(noon(prev),{weekday:'short',day:'numeric',month:'numeric'}))}</button>` : '<span></span>'}${next ? `<button type="button" class="btn" data-go="${next}">${escape(format(noon(next),{weekday:'short',day:'numeric',month:'numeric'}))} →</button>` : ''}</nav>`;
       document.querySelectorAll('.photo').forEach(img => img.addEventListener('error', () => { img.nextElementSibling?.remove(); img.remove(); }, { once:true }));
     }
@@ -612,6 +658,7 @@
         data = payload;
         const ids = new Set(payload.activities.map(a => a.id));
         bookmarks.forEach(id => { if (!ids.has(id)) bookmarks.delete(id); }); saveBookmarks();
+        dislikes.forEach(id => { if (!ids.has(id)) dislikes.delete(id); }); saveDislikes();
         const hash = location.hash.slice(1);
         if (/^\d{4}-\d{2}-\d{2}$/.test(hash)) selectedDate = hash;
       } catch { loadFailed = true; }
@@ -624,6 +671,13 @@
     get('sort').addEventListener('change', render);
     get('category').addEventListener('change', e => { category = e.target.value; render(); });
     get('reset').addEventListener('click', resetFilters);
+    get('times').addEventListener('click', e => {
+      const b = e.target.closest('[data-time]'); if (!b) return;
+      const s = b.dataset.time;
+      times.has(s) ? times.delete(s) : times.add(s);
+      saveTimes(); render();
+      get('times').querySelector(`[data-time="${s}"]`)?.focus({ preventScroll:true });
+    });
     ['age','city','price'].forEach(id => get(id).addEventListener('change', e => { store.set('leikki-' + id, e.target.value); render(); }));
     get('days').addEventListener('click', e => { const b = e.target.closest('[data-date]'); if (b) selectDay(b.dataset.date); });
     get('days').addEventListener('keydown', e => {
@@ -634,10 +688,18 @@
     get('results').addEventListener('click', e => {
       const go = e.target.closest('[data-go]'); if (go) return selectDay(go.dataset.go);
       if (e.target.closest('[data-reset]')) return resetFilters();
+      const dis = e.target.closest('[data-dislike]');
+      if (dis) {
+        const id = dis.dataset.dislike;
+        if (dislikes.has(id)) dislikes.delete(id); else { dislikes.add(id); if (bookmarks.delete(id)) saveBookmarks(); }
+        saveDislikes(); render();
+        return;
+      }
       const save = e.target.closest('[data-save]');
       if (save) {
         const id = save.dataset.save;
         bookmarks.has(id) ? bookmarks.delete(id) : bookmarks.add(id);
+        if (bookmarks.has(id) && dislikes.delete(id)) saveDislikes();
         saveBookmarks(); render();
         return [...get('results').querySelectorAll('[data-save]')].find(b => b.dataset.save === id)?.focus({ preventScroll:true });
       }
@@ -645,6 +707,7 @@
       if (!c || e.target.closest('a,button,details,input,select') || String(getSelection?.() ?? '')) return;
       window.open(c.dataset.url, '_blank', 'noopener,noreferrer');
     });
+    get('results').addEventListener('toggle', e => { if (e.target.matches('.disliked-section')) dislikedOpen = e.target.open; }, true);
     const backTop = get('back-top');
     backTop.addEventListener('click', () => window.scrollTo({ top:0 }));
     const onScroll = () => {
