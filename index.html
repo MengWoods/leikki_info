@@ -86,6 +86,9 @@
     .pill::after { content:''; position:absolute; right:13px; width:6px; height:6px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:translateY(-2px) rotate(45deg); pointer-events:none; color:var(--muted); }
     .pill .dd-btn { background:var(--field); border:1px solid var(--line); border-radius:999px; padding:7px 32px 7px 14px; min-height:38px; font-size:14px; font-weight:600; color:var(--ink); }
     .pill .dd-btn:hover { border-color:var(--muted); }
+    .pill .dd-btn { display:inline-flex; align-items:center; gap:6px; }
+    .pill .dd-btn svg { flex:none; color:var(--muted); }
+    .pill.on .dd-btn svg { color:var(--green); }
     .pill.on .dd-btn { background:var(--tint); border-color:var(--green); color:var(--green); }
     .pill.on::after { color:var(--green); }
     .pill.sort { margin-left:auto; }
@@ -110,6 +113,11 @@
     .dd-menu li:hover, .dd-menu li:focus-visible { background:var(--raised); }
     .dd-menu li[aria-selected="true"] { color:var(--green); font-weight:700; }
     .dd-menu li[aria-selected="true"]::after { content:''; width:5px; height:10px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(45deg) translate(-2px,-2px); flex:0 0 auto; }
+    .dd-menu.multi li { justify-content:flex-start; gap:10px; }
+    .dd-menu.multi li::before { content:''; flex:none; width:18px; height:18px; box-sizing:border-box; border:2px solid var(--muted); border-radius:4px; background:center/14px no-repeat; }
+    .dd-menu.multi li[aria-selected="true"]::before { background-color:var(--accent); border-color:var(--accent); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+    .dd-menu.multi li[aria-selected="true"]::after { display:none; }
+    .dd-menu.multi li:first-of-type { border-bottom:1px solid var(--line); border-radius:9px 9px 0 0; margin-bottom:4px; }
     .dd-menu .dd-title { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); padding:6px 12px 4px; font-weight:700; }
     @keyframes pop { from { opacity:0; transform:scale(.97) translateY(-4px); } to { opacity:1; transform:none; } }
     @media (max-width:600px) { .dd-menu li { min-height:44px; font-size:15px; } }
@@ -214,17 +222,18 @@
       .days { gap:2px; padding:6px 0 4px; }
       .day-tab { padding:4px 2px 5px; font-size:11px; border-radius:8px; }
       .day-tab .count { font-size:10px; min-height:14px; }
-      /* Phone: filters wrap into compact rows - no sideways scrolling */
-      .filters { flex-wrap:wrap; overflow:visible; padding:2px 0 8px; gap:6px; }
-      .pill { flex:1 1 auto; min-width:0; }
-      .pill .dd-btn { width:100%; min-height:34px; padding:5px 26px 5px 11px; font-size:13px; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-      .pill::after { right:11px; }
-      .pill.sort { margin-left:0; }
-      .pill.sort .dd-btn { background:var(--field); }
-      .time-toggles { flex:1 1 auto; }
-      .time-chip { min-height:28px; padding:3px 8px; gap:4px; font-size:13px; }
-      .time-chip .lbl { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-      .reset { flex:0 0 auto; }
+      /* Phone: one compact row of icon buttons; active filters are tinted green (value in the menu/tooltip) */
+      .filters { flex-wrap:wrap; overflow:visible; padding:0 0 8px; gap:5px; }
+      .pill { flex:0 0 auto; min-width:0; }
+      .pill::after { display:none; }
+      .pill .dd-btn { width:32px; height:32px; min-height:0; padding:0; justify-content:center; font-size:13px; }
+      .pill .dd-btn .val, .time-chip .lbl, .time-chip .n { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+      .pill.sort { margin-left:auto; }
+      .time-toggles { flex:0 0 auto; padding:1px; }
+      .time-chip { min-height:28px; padding:0 7px; }
+      .reset { flex:0 0 auto; width:28px; height:28px; padding:0; font-size:0; text-decoration:none; border-radius:999px; position:relative; }
+      .reset::before { content:'×'; font-size:20px; line-height:28px; font-weight:600; }
+      .reset:hover { background:var(--raised); }
       .days { -webkit-mask-image:linear-gradient(to right,#000 88%,transparent); mask-image:linear-gradient(to right,#000 88%,transparent); }
       .day-heading { padding:14px 0 10px; }
       .cards { gap:12px; }
@@ -271,7 +280,7 @@
       <div class="days" id="days" role="tablist" aria-label="Days"></div>
       <div class="filters" id="filters" role="group" aria-label="Filters">
         <div class="pill"><select id="age" hidden data-label="age"></select></div>
-        <div class="pill"><select id="city" hidden data-label="city"></select></div>
+        <div class="pill"><select id="city" hidden multiple data-label="city"></select></div>
         <div class="time-toggles" id="times" role="group"></div>
         <div class="pill"><select id="price" hidden data-label="priceLabel"></select></div>
         <div class="pill"><select id="category" hidden data-label="activityType"></select></div>
@@ -394,6 +403,13 @@
     const dislikes = loadSet('leikki-disliked');
     const saveDislikes = () => store.set('leikki-disliked', JSON.stringify([...dislikes]));
     const slots = ['morning','afternoon','evening'];
+    const pillIcons = {
+      age: '<circle cx="12" cy="5" r="2.5"/><path d="M12 8.5V15M7.5 11.5h9M9 21l3-6 3 6"/>',
+      city: '<path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+      price: '<path d="M17.5 6.5a7 7 0 1 0 0 11M4 10h9M4 14h9"/>',
+      category: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><circle cx="17" cy="7" r="3.5"/><path d="M7 13.5l3.8 7H3.2z"/><rect x="13.5" y="13.5" width="7" height="7" rx="3.5"/>',
+      sort: '<path d="M7 4v16M3.5 16.5 7 20l3.5-3.5M17 20V4M13.5 7.5 17 4l3.5 3.5"/>'
+    };
     const times = loadSet('leikki-time', slots);
     const icon = d => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
     const timeIcons = {
@@ -402,7 +418,11 @@
       evening: icon('<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>')
     };
     const saveTimes = () => store.set('leikki-time', JSON.stringify([...times]));
-    const saved = { age:store.get('leikki-age'), city:store.get('leikki-city'), price:store.get('leikki-price') };
+    const saved = { age:store.get('leikki-age'), price:store.get('leikki-price') };
+    // Cities: multi-select; empty set = all. Older saves stored a single city string.
+    const cities = (() => { const raw = store.get('leikki-city'); try { const v = JSON.parse(raw); if (Array.isArray(v)) return new Set(v.filter(c => cityKeys.includes(c))); } catch {} return new Set(cityKeys.includes(raw) ? [raw] : []); })();
+    const saveCities = () => store.set('leikki-city', JSON.stringify([...cities]));
+    const syncCitySelect = () => [...get('city').options].forEach(o => { o.selected = o.value === 'all' ? cities.size === 0 : cities.has(o.value); });
 
     const get = id => document.getElementById(id);
     const t = (key, n) => (copy[language][key] ?? copy.en[key] ?? key).replace('{n}', n);
@@ -437,6 +457,7 @@
       const btn = select.ddButton;
       btn.setAttribute('aria-expanded', 'true');
       menu.setAttribute('aria-label', t(select.dataset.label));
+      menu.classList.toggle('multi', select.multiple); menu.setAttribute('aria-multiselectable', String(select.multiple));
       menu.innerHTML = `<div class="dd-title" aria-hidden="true">${escape(t(select.dataset.label))}</div>` + [...select.options].map((o, i) =>
         `<li role="option" tabindex="-1" data-index="${i}" aria-selected="${o.selected}"${o.lang ? ` lang="${o.lang}"` : ''}>${escape(o.textContent)}</li>`).join('');
       menu.hidden = false;
@@ -458,6 +479,11 @@
     }
     function choose(li) {
       const select = openSelect, index = Number(li.dataset.index);
+      if (select.multiple) {   // toggle and keep the menu open
+        select.dispatchEvent(new CustomEvent('pick', { detail:select.options[index].value }));
+        menu.querySelectorAll('li').forEach(x => x.setAttribute('aria-selected', String(select.options[x.dataset.index].selected)));
+        return li.focus({ preventScroll:true });
+      }
       closeMenu(true);
       if (select.selectedIndex !== index) { select.selectedIndex = index; select.dispatchEvent(new Event('change')); }
     }
@@ -477,8 +503,10 @@
     function syncDropdowns() {
       document.querySelectorAll('select[data-label]').forEach(select => {
         const btn = select.ddButton; if (!btn) return;
-        btn.textContent = select.options[select.selectedIndex]?.textContent ?? '';
-        btn.setAttribute('aria-label', `${t(select.dataset.label)}: ${btn.textContent}`);
+        const value = [...select.selectedOptions].map(o => o.textContent).join(', ');
+        btn.innerHTML = (pillIcons[select.id] ? icon(pillIcons[select.id]) : '') + `<span class="val">${escape(value)}</span>`;
+        btn.setAttribute('aria-label', `${t(select.dataset.label)}: ${value}`);
+        btn.title = btn.getAttribute('aria-label');
       });
     }
     document.querySelectorAll('select[data-label]').forEach(enhance);
@@ -486,13 +514,13 @@
     /* ---------- Static controls (rebuilt on language change) ---------- */
     function buildControls() {
       const keep = id => get(id).value;
-      const age = keep('age') || saved.age || 'all', city = keep('city') || saved.city || 'all', price = keep('price') || saved.price || 'all'
+      const age = keep('age') || saved.age || 'all', price = keep('price') || saved.price || 'all'
         , sort = keep('sort') || 'score';
       get('age').innerHTML = `<option value="all">${escape(t('anyAge'))}</option>` + Array.from({length:9}, (_, n) =>
         `<option value="${n}">${escape(n === 0 ? t('ageUnder1') : t(n === 1 ? 'ageYear' : 'ageYears', n))}</option>`).join('');
       get('city').innerHTML = `<option value="all">${escape(t('allCities'))}</option>` + cityKeys.map(c => `<option value="${c}">${escape(t(c + 'City'))}</option>`).join('');
       get('price').innerHTML = [['all','anyPrice'],['free','freeOnly'],['paid','paidOnly']].map(([v,k]) => `<option value="${v}">${escape(t(k))}</option>`).join('');
-      get('city').value = cityKeys.includes(city) ? city : 'all';
+      syncCitySelect();
       get('price').value = ['free','paid'].includes(price) ? price : 'all';
       get('sort').innerHTML = `<option value="score">${escape(t('bestFirst'))}</option><option value="time">${escape(t('timeFirst'))}</option>`;
       get('age').value = [...get('age').options].some(o => o.value === age) ? age : 'all';
@@ -563,16 +591,16 @@
       return h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
     }
     function matchesFilters(a, { ignoreCategory = false, ignoreTime = false } = {}) {
-      const city = get('city').value, price = get('price').value, age = get('age').value;
-      return (city === 'all' || a.city === city)
+      const price = get('price').value, age = get('age').value;
+      return (cities.size === 0 || cities.has(a.city))
         && (price === 'all' || (a.price?.status ?? 'free') === price)
         && (ignoreCategory || category === 'all' || a.category === category)
         && (ignoreTime || times.size === 0 || times.has(slotOf(a)))
         && (age === 'all' || ((a.ages.min === null || a.ages.min <= +age) && (a.ages.max === null || a.ages.max >= +age)));
     }
-    const activeFilterCount = () => ['city','price','age'].filter(id => get(id).value !== 'all').length + (category !== 'all') + (times.size > 0);
+    const activeFilterCount = () => ['price','age'].filter(id => get(id).value !== 'all').length + (cities.size > 0) + (category !== 'all') + (times.size > 0);
     function resetFilters() {
-      ['city','price','age'].forEach(id => { get(id).value = 'all'; store.set('leikki-' + id, 'all'); }); category = 'all'; times.clear(); saveTimes(); render();
+      ['price','age'].forEach(id => { get(id).value = 'all'; store.set('leikki-' + id, 'all'); }); cities.clear(); saveCities(); syncCitySelect(); category = 'all'; times.clear(); saveTimes(); render();
     }
 
     /* ---------- Render ---------- */
@@ -627,7 +655,9 @@
         return `<option value="${c}">${escape(t(c === 'all' ? 'allActivities' : c))} (${count})</option>`;
       }).join('');
       get('category').value = category;
-      ['age','category','city','price'].forEach(id => get(id).parentElement.classList.toggle('on', get(id).value !== 'all'));
+      ['age','category','price'].forEach(id => get(id).parentElement.classList.toggle('on', get(id).value !== 'all'));
+      get('city').parentElement.classList.toggle('on', cities.size > 0);
+      get('sort').parentElement.classList.toggle('on', get('sort').value !== 'score');
       const n = activeFilterCount();
       get('reset').hidden = !n;
 
@@ -690,7 +720,12 @@
       saveTimes(); render();
       get('times').querySelector(`[data-time="${s}"]`)?.focus({ preventScroll:true });
     });
-    ['age','city','price'].forEach(id => get(id).addEventListener('change', e => { store.set('leikki-' + id, e.target.value); render(); }));
+    get('city').addEventListener('pick', e => {
+      const c = e.detail;
+      if (c === 'all') cities.clear(); else { cities.has(c) ? cities.delete(c) : cities.add(c); if (cities.size === cityKeys.length) cities.clear(); }
+      saveCities(); syncCitySelect(); render();
+    });
+    ['age','price'].forEach(id => get(id).addEventListener('change', e => { store.set('leikki-' + id, e.target.value); render(); }));
     get('days').addEventListener('click', e => { const b = e.target.closest('[data-date]'); if (b) selectDay(b.dataset.date); });
     get('days').addEventListener('keydown', e => {
       const i = visibleDays.indexOf(selectedDate);
