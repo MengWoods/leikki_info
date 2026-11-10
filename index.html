@@ -90,13 +90,14 @@
     .pill.on::after { color:var(--green); }
     .pill.sort { margin-left:auto; }
     .pill.sort .dd-btn { background:transparent; }
-    .time-toggles { display:flex; gap:6px; flex:0 0 auto; }
-    .time-chip { flex:0 0 auto; background:var(--field); border:1px solid var(--line); border-radius:999px; padding:7px 14px; min-height:38px; font:inherit; font-size:14px; font-weight:600; color:var(--ink); cursor:pointer; white-space:nowrap; }
-    .time-chip:hover { border-color:var(--muted); }
-    .time-chip .n { font-weight:500; color:var(--muted); margin-left:4px; }
+    .time-toggles { display:flex; gap:2px; flex:0 0 auto; padding:2px; background:var(--field); border:1px solid var(--line); border-radius:999px; }
+    .time-chip { flex:1 0 auto; display:inline-flex; align-items:center; justify-content:center; gap:6px; background:transparent; border:1px solid transparent; border-radius:999px; padding:4px 12px; min-height:32px; font:inherit; font-size:14px; font-weight:600; color:var(--ink); cursor:pointer; white-space:nowrap; }
+    .time-chip svg { flex:none; color:var(--muted); }
+    .time-chip:hover { background:var(--raised); }
+    .time-chip .n { font-weight:500; color:var(--muted); font-variant-numeric:tabular-nums; }
     .time-chip.zero:not([aria-pressed="true"]) { opacity:.55; }
     .time-chip[aria-pressed="true"] { background:var(--tint); border-color:var(--green); color:var(--green); }
-    .time-chip[aria-pressed="true"] .n { color:var(--green); }
+    .time-chip[aria-pressed="true"] .n, .time-chip[aria-pressed="true"] svg { color:var(--green); }
     .reset { flex:0 0 auto; background:none; border:0; color:var(--green); text-decoration:underline; text-underline-offset:3px; font-size:13px; font-weight:600; padding:6px 4px; }
 
     .dd-btn { white-space:nowrap; cursor:pointer; }
@@ -213,13 +214,18 @@
       .days { gap:2px; padding:6px 0 4px; }
       .day-tab { padding:4px 2px 5px; font-size:11px; border-radius:8px; }
       .day-tab .count { font-size:10px; min-height:14px; }
-      .filters { padding:2px 0 8px; gap:6px; }
-      .pill .dd-btn { min-height:34px; padding:5px 28px 5px 12px; font-size:13px; }
+      /* Phone: filters wrap into compact rows - no sideways scrolling */
+      .filters { flex-wrap:wrap; overflow:visible; padding:2px 0 8px; gap:6px; }
+      .pill { flex:1 1 auto; min-width:0; }
+      .pill .dd-btn { width:100%; min-height:34px; padding:5px 26px 5px 11px; font-size:13px; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
       .pill::after { right:11px; }
       .pill.sort { margin-left:0; }
-      .time-chip { min-height:34px; padding:5px 12px; font-size:13px; }
-      .filters, .days { -webkit-mask-image:linear-gradient(to right,#000 88%,transparent); mask-image:linear-gradient(to right,#000 88%,transparent); }
-      .filters::after { content:''; flex:0 0 24px; }
+      .pill.sort .dd-btn { background:var(--field); }
+      .time-toggles { flex:1 1 auto; }
+      .time-chip { min-height:28px; padding:3px 8px; gap:4px; font-size:13px; }
+      .time-chip .lbl { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+      .reset { flex:0 0 auto; }
+      .days { -webkit-mask-image:linear-gradient(to right,#000 88%,transparent); mask-image:linear-gradient(to right,#000 88%,transparent); }
       .day-heading { padding:14px 0 10px; }
       .cards { gap:12px; }
       .card-body { padding:14px 14px 12px; }
@@ -266,9 +272,9 @@
       <div class="filters" id="filters" role="group" aria-label="Filters">
         <div class="pill"><select id="age" hidden data-label="age"></select></div>
         <div class="pill"><select id="city" hidden data-label="city"></select></div>
+        <div class="time-toggles" id="times" role="group"></div>
         <div class="pill"><select id="price" hidden data-label="priceLabel"></select></div>
         <div class="pill"><select id="category" hidden data-label="activityType"></select></div>
-        <div class="time-toggles" id="times" role="group"></div>
         <button type="button" class="reset" id="reset" hidden data-i18n="reset">Clear</button>
         <div class="pill sort"><select id="sort" hidden data-label="sort"></select></div>
       </div>
@@ -389,6 +395,12 @@
     const saveDislikes = () => store.set('leikki-disliked', JSON.stringify([...dislikes]));
     const slots = ['morning','afternoon','evening'];
     const times = loadSet('leikki-time', slots);
+    const icon = d => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+    const timeIcons = {
+      morning: icon('<path d="M4 18h16M7 14a5 5 0 0 1 10 0M12 4v3M5.6 8.6l1.4 1.4M18.4 8.6 17 10"/>'),
+      afternoon: icon('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+      evening: icon('<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>')
+    };
     const saveTimes = () => store.set('leikki-time', JSON.stringify([...times]));
     const saved = { age:store.get('leikki-age'), city:store.get('leikki-city'), price:store.get('leikki-price') };
 
@@ -608,7 +620,7 @@
       get('times').setAttribute('aria-label', t('timeOfDay'));
       get('times').innerHTML = slots.map(s => {
         const count = dayAnyTime.filter(a => slotOf(a) === s).length;
-        return `<button type="button" class="time-chip${count ? '' : ' zero'}" data-time="${s}" aria-pressed="${times.has(s)}" title="${escape(t(s + 'Hours'))}">${escape(t(s))}<span class="n">${count}</span></button>`;
+        return `<button type="button" class="time-chip${count ? '' : ' zero'}" data-time="${s}" aria-pressed="${times.has(s)}" title="${escape(t(s) + ': ' + t(s + 'Hours'))}">${timeIcons[s]}<span class="lbl">${escape(t(s))}</span><span class="n">${count}</span></button>`;
       }).join('');
       get('category').innerHTML = categories.map(c => {
         const count = c === 'all' ? dayAll.length : dayAll.filter(a => a.category === c).length;
