@@ -194,6 +194,8 @@
     .source-item small { display:block; color:var(--muted); font-size:12px; margin-top:4px; }
     footer { border-top:1px solid var(--line); padding:20px 0 30px; color:var(--muted); font-size:12px; background:var(--surface); }
     footer .wrap { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    .github-link { display:inline-flex; align-items:center; gap:6px; }
+    .github-link svg { flex:none; }
     .error { padding:35px 0; text-align:center; }
 
     /* Floating back-to-top */
@@ -300,6 +302,10 @@
     <div class="wrap">
       <span data-i18n="footer">Families in Espoo, Helsinki and Vantaa, ages 0-8. Updated daily.</span>
       <span><span data-i18n="attribution">Event data:</span> <a href="https://api.espoo.fi/events/v1/">Espoo</a> / <a href="https://api.hel.fi/linkedevents/v1/">Helmet</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+      <a class="github-link" href="https://github.com/MengWoods/leikki_info">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.65 7.65 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        <span data-i18n="github">Issues, requests, and contributions</span>
+      </a>
     </div>
   </footer>
 
@@ -335,6 +341,7 @@
         check:'Tap a card to open its original page. Check it before leaving. Unspecified ages and prices are flagged.',
         more:'More places and calendars', directoryNote:'Links only: these are not verified sessions for the dates shown. Check opening hours and prices on each site.',
         footer:'Families in Espoo, Helsinki and Vantaa, ages 0-8. Updated daily.', attribution:'Event data:', updated:'Last updated',
+        github:'Issues, requests, and contributions',
         stale:'This snapshot has not been updated recently. Check the original sources.', failed:'Some sources could not be updated. Retained listings are marked outdated.',
         dateWarning:'The saved calendar does not cover all of next week.', error:'The calendar could not be loaded.', retry:'Try again',
         espoo:'Espoo events', helsinki:'Helsinki events', vantaa:'Vantaa events', library:'Helmet library events', mll:'MLL family activities', aurora:'Children’s Cultural Centre Aurora', vantaaParks:'Vantaa resident parks',
@@ -366,6 +373,7 @@
         check:'Napauta korttia avataksesi alkuperäisen sivun. Tarkista se ennen lähtöä. Puuttuvat ikä- ja hintatiedot merkitään.',
         more:'Lisää paikkoja ja kalentereita', directoryNote:'Vain linkkejä: nämä eivät ole vahvistettuja tapahtumia näytetyille päiville. Tarkista aukioloajat ja hinnat sivuilta.',
         footer:'Espoon, Helsingin ja Vantaan perheille, 0-8-vuotiaille. Päivitetään päivittäin.', attribution:'Tapahtumatiedot:', updated:'Päivitetty',
+        github:'Ongelmat, ehdotukset ja osallistuminen',
         stale:'Tietoja ei ole päivitetty äskettäin. Tarkista alkuperäiset lähteet.', failed:'Kaikkia lähteitä ei voitu päivittää. Säilytetyt tapahtumat on merkitty vanhentuneiksi.',
         dateWarning:'Tallennettu kalenteri ei kata koko ensi viikkoa.', error:'Kalenteria ei voitu ladata.', retry:'Yritä uudelleen',
         espoo:'Espoon tapahtumat', helsinki:'Helsingin tapahtumat', vantaa:'Vantaan tapahtumat', library:'Helmet-kirjastojen tapahtumat', mll:'MLL:n perhetoiminta', aurora:'Lasten kulttuurikeskus Aurora', vantaaParks:'Vantaan asukaspuistot',
