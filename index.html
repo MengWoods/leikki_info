@@ -181,6 +181,10 @@
     details p { white-space:pre-line; overflow-wrap:anywhere; max-height:230px; overflow:auto; margin:8px 0; }
     details ul { padding-left:18px; margin:8px 0; }
     .card-footer { display:flex; justify-content:flex-end; align-items:center; flex-wrap:wrap; gap:10px; border-top:1px solid var(--line); margin-top:14px; padding-top:12px; font-size:13px; }
+    .calendar-menu { margin-inline-end:auto; color:var(--green); font-size:14px; }
+    .calendar-menu summary { display:list-item; line-height:24px; }
+    .calendar-options { display:flex; flex-wrap:wrap; gap:4px 12px; margin-top:4px; }
+    .calendar-options a { display:inline-flex; align-items:center; min-height:44px; }
     .empty { color:var(--muted); padding:28px 0; margin:0; font-size:14px; text-align:center; }
     .empty button { display:block; margin:12px auto 0; }
     .pager { display:flex; justify-content:space-between; gap:10px; margin-top:24px; }
@@ -337,6 +341,7 @@
         morningHours:'Starts before 12:00', afternoonHours:'Starts 12:00–17:00', eveningHours:'Starts 17:00 or later',
         ages:'Ages', allAge:'All ages', unspecifiedAge:'Age not given', outdated:'Outdated', photo:'Photo', finnishText:'Original title',
         moreInfo:'Event details', language:'Event language', notGiven:'Not specified',
+        addToCalendar:'Add to calendar', calendarFile:'Apple Calendar / .ics',
         rating:'Recommendation', starsOf:'{n} out of 5 stars', whyRating:'Why this rating?',
         ratingNote:'A rule-based suggestion, not a review or guarantee. Points out of 100 become stars (20 points = 1 star). Play and movement weigh most; missing details earn nothing.',
         freeSource:'Free of charge', pricedOffer:'Price stated up front', knownAge:'Age guidance provided', duration:'30-120 minute session', dropIn:'No advance registration needed', knownVenue:'Named venue',
@@ -370,6 +375,7 @@
         morningHours:'Alkaa ennen klo 12', afternoonHours:'Alkaa klo 12–17', eveningHours:'Alkaa klo 17 tai myöhemmin',
         ages:'Ikä', allAge:'Ei ikärajaa', unspecifiedAge:'Ikää ei ilmoitettu', outdated:'Vanhentunut', photo:'Kuva', finnishText:'Alkuperäinen nimi',
         moreInfo:'Tapahtuman tiedot', language:'Tapahtuman kieli', notGiven:'Ei ilmoitettu',
+        addToCalendar:'Lisää kalenteriin', calendarFile:'Apple-kalenteri / .ics',
         rating:'Suositus', starsOf:'{n} / 5 tähteä', whyRating:'Mistä arvio tulee?',
         ratingNote:'Sääntöpohjainen ehdotus, ei asiakasarvio tai takuu. 100 pisteestä lasketaan tähdet (20 pistettä = 1 tähti). Leikki ja liikkuminen painottuvat; puuttuvista tiedoista ei saa pisteitä.',
         freeSource:'Maksuton', pricedOffer:'Hinta ilmoitettu etukäteen', knownAge:'Ikätiedot ilmoitettu', duration:'30-120 minuutin tapahtuma', dropIn:'Ennakkoilmoittautumista ei tarvita', knownVenue:'Tapahtumapaikka ilmoitettu',
@@ -575,6 +581,49 @@
       }
       return age.confirmed ? t('allAge') : t('unspecifiedAge');
     }
+    const calendarTime = date => new Date(date).toISOString().replace(/[-:]|\.\d{3}/g, '');
+    const calendarText = value => value.replace(/\\/g, '\\\\').replace(/\r\n|\r|\n/g, '\\n').replace(/[,;]/g, '\\$&');
+
+    function calendarMenu(activity, location) {
+      const title = text(activity.title);
+      const start = calendarTime(activity.start);
+      const end = activity.end && Date.parse(activity.end) > Date.parse(activity.start) ? calendarTime(activity.end) : '';
+      const params = new URLSearchParams({
+        action:'TEMPLATE', text:title, dates:`${start}/${end || start}`, location, ctz:'Europe/Helsinki'
+      });
+      return `<details class="calendar-menu"><summary class="btn">${escape(t('addToCalendar'))}</summary>
+        <div class="calendar-options">${link(`https://calendar.google.com/calendar/render?${params}`, 'Google Calendar')}
+        <a href="#" data-calendar-event="${escape(activity.id)}">${escape(t('calendarFile'))}</a></div></details>`;
+    }
+
+    function calendarFile(activity) {
+      const start = calendarTime(activity.start);
+      const lines = [
+        'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Leikki//Activities//EN', 'BEGIN:VEVENT',
+        `UID:${calendarText(activity.id)}-${start}@leikki.info`,
+        `DTSTAMP:${calendarTime(data.generatedAt)}`, `DTSTART:${start}`,
+        `SUMMARY:${calendarText(text(activity.title))}`,
+        `LOCATION:${calendarText([text(activity.venue), text(activity.address)].filter(Boolean).join(', '))}`
+      ];
+      if (activity.end && Date.parse(activity.end) > Date.parse(activity.start)) lines.push(`DTEND:${calendarTime(activity.end)}`);
+      lines.push('END:VEVENT', 'END:VCALENDAR', '');
+      const encoder = new TextEncoder();
+      const folded = lines.map(line => {
+        let result = '', width = 0;
+        for (const character of line) {
+          const bytes = encoder.encode(character).length;
+          if (width + bytes > 75) {
+            result += '\r\n ';
+            width = 1;
+          }
+          result += character;
+          width += bytes;
+        }
+        return result;
+      });
+      return new Blob([folded.join('\r\n')], { type:'text/calendar;charset=utf-8' });
+    }
+
     function card(a) {
       const sameDayEnd = a.end && formatISO(new Date(a.end)) === a.date;
       const hm = v => format(v, { hour:'2-digit', minute:'2-digit' });
@@ -600,7 +649,7 @@
         <div class="tags">${priceTag}<span class="tag city">${escape(t(a.city + 'City'))}</span><span class="tag">${escape(t(a.category))}</span><span class="tag${a.ages.confirmed ? '' : ' caution'}">${escape(ageLabel(a.ages))}</span>${a.environment !== 'unknown' ? `<span class="tag">${escape(t(a.environment))}</span>` : ''}${a.stale ? `<span class="tag caution">${escape(t('outdated'))}</span>` : ''}</div>
         <details><summary>${escape(t('moreInfo'))}</summary>${description ? `<p lang="${descLang}">${escape(description)}</p>` : ''}<p>${escape(t('language'))}: ${escape(a.languages.length ? a.languages.join(', ').toUpperCase() : t('notGiven'))}${pr.status === 'paid' && priceText ? `<br>${escape(t('priceLabel'))}: ${escape(priceText)}` : ''}</p></details>
         <details><summary>${escape(t('whyRating'))}</summary><ul>${a.score.reasons.map(r => `<li>+${r.points}: ${escape(t(r.key))}</li>`).join('')}</ul><p>${escape(t('ratingNote'))}</p></details>
-        ${extra ? `<div class="card-footer">${extra}</div>` : ''}
+        <div class="card-footer">${calendarMenu(a, [text(a.venue), address].filter(Boolean).join(', '))}${extra}</div>
       </div></article>`;
     }
 
@@ -776,6 +825,21 @@
     });
     const copyFeedbackTimers = new WeakMap();
     get('results').addEventListener('click', async e => {
+      const calendarLink = e.target.closest('[data-calendar-event]');
+      if (calendarLink) {
+        e.preventDefault();
+        const activity = data.activities.find(a => a.id === calendarLink.dataset.calendarEvent);
+        if (!activity) return;
+        const url = URL.createObjectURL(calendarFile(activity));
+        const download = document.createElement('a');
+        download.href = url;
+        download.download = 'leikki-event.ics';
+        document.body.appendChild(download);
+        download.click();
+        download.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        return;
+      }
       const copyButton = e.target.closest('[data-copy-address]');
       if (copyButton) {
         let feedback = 'addressCopied';
