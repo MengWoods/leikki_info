@@ -39,13 +39,17 @@ test('classifies free, paid and unknown prices', () => {
   assert.ok(result({}).score.value > paid.score.value);
 });
 test('excludes cancelled, recurring containers, wrong dates and age ranges', () => {
-  for (const change of [{ event_status: 'EventCancelled' }, { super_event_type: 'recurring' }, { sub_events: [{}] }, { start_time: '2026-11-16T08:00:00Z' }, { audience_min_age: 9 }]) assert.equal(result(change), null);
+  for (const change of [{ event_status: 'EventCancelled' }, { super_event_type: 'recurring' }, { sub_events: [{}] }, { start_time: '2026-11-16T08:00:00Z' }, { audience_max_age: -1 }, { audience_min_age: 16 }]) assert.equal(result(change), null);
   assert.ok(result({ audience_min_age: 3, audience_max_age: 5 }));
+  assert.deepEqual(result({ audience_min_age: 9, audience_max_age: 9 }).ages, { min: 9, max: 9, confirmed: true });
+  assert.deepEqual(result({ audience_min_age: 12, audience_max_age: 15 }).ages, { min: 12, max: 15, confirmed: true });
   assert.equal(result({}).ages.confirmed, false);
 });
 test('excludes school-only events and locations outside the chosen region', () => {
   assert.equal(result({ description: { en: 'Family theatre for daycare centers' } }), null);
   assert.equal(result({ name: { en: 'Saunalahti seniors evening' } }), null);
+  assert.equal(result({ name: { en: 'Art class for adults' } }), null);
+  assert.ok(result({ name: { en: 'Art workshop for teens' }, audience_min_age: 13, audience_max_age: 17 }));
   assert.ok(result({ name: { en: 'Seniors and children play together' } }));
   assert.equal(result({ location: { divisions: [{ type: 'muni', ocd_id: 'ocd-division/country:fi/kunta:turku' }] } }), null);
 });
@@ -55,11 +59,11 @@ test('includes infant sessions with a bounded baby age group', () => {
   assert.ok(result({ name: { fi: 'Vauvat ja taaperot' } }));
   assert.equal(result({ name: { fi: 'Temppurata pienille' } }).category, 'movement');
 });
-test('excludes school-age clubs and respects explicit description age ranges', () => {
-  assert.equal(result({ name: { en: 'Manga and anime hobby for 3rd-6th graders' } }), null);
-  assert.equal(result({ name: { fi: 'Kerho 3.-6.-luokkalaisille' } }), null);
+test('includes school-age activities and respects explicit description age ranges', () => {
+  assert.equal(result({ name: { en: 'Manga and anime hobby for 3rd-6th graders' } }).ages.min, 9);
+  assert.equal(result({ name: { fi: 'Kerho 3.-6.-luokkalaisille' } }).ages.min, 9);
   assert.ok(result({ description: { fi: 'Leikki 7-12-vuotiaille lapsille.' } }));
-  assert.equal(result({ description: { fi: 'Leikki 9-12-vuotiaille lapsille.' } }), null);
+  assert.deepEqual(result({ description: { fi: 'Leikki 9-12-vuotiaille lapsille.' } }).ages, { min: 9, max: 12, confirmed: true });
   const activity = result({ description: { en: 'Free family play for 3-5 year-olds.' } });
   assert.deepEqual(activity.ages, { min: 3, max: 5, confirmed: true });
 });

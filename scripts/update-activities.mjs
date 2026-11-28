@@ -68,7 +68,7 @@ export function normalize(event, feed, week, checkedAt) {
   const titleText = Object.values(title).join(' ');
   const babyOnly = /(vauva|vauvo|babies|baby|infant)/i.test(titleText) && !/(taapero|toddler|sisar|sibling|perhe|family)/i.test(titleText);
   if (/(senior|seniori|senpp|ikäihmi|eläkeläi|older adults)/i.test(titleText) && !/(perhe|family|families|laps|children|kids)/i.test(titleText)) return null;
-  if (/(nuorille|nuorten|teenagers|teens|homework club|läksykerho)/i.test(titleText)) return null;
+  if (/(homework club|läksykerho)/i.test(titleText)) return null;
   const grade = titleText.match(/(?:([1-9])(?:st|nd|rd|th)?\s*[-\u2013]\s*[1-9](?:st|nd|rd|th)?\s*(?:graders|grades)|grades?\s*([1-9])|([1-9])\.?\s*[-\u2013]\s*[1-9]\.?\s*[- ]?luokk)/i);
   const place = event.location || {};
   const city = place.divisions?.find(division => division.type === 'muni')?.ocd_id?.split(':').at(-1);
@@ -78,7 +78,7 @@ export function normalize(event, feed, week, checkedAt) {
   const gradeMinimum = grade ? Number(grade.slice(1).find(Boolean)) + 6 : null;
   const minimum = event.audience_min_age == null ? (explicitAges ? Number(explicitAges[1]) : babyOnly ? 0 : gradeMinimum) : Number(event.audience_min_age);
   const maximum = event.audience_max_age == null ? (explicitAges ? Number(explicitAges[2]) : babyOnly ? 1 : null) : Number(event.audience_max_age);
-  if ((minimum !== null && minimum > 8) || (maximum !== null && maximum < 0)) return null;
+  if ((minimum !== null && minimum >= 16) || (maximum !== null && maximum < 0)) return null;
   const family = /(perhe|family|families|laps|children|kids|leikki|playground|taapero|toddler|vauva|vauvo|baby|babies|satutuokio|story.?time)/i.test(text);
   if (!family && minimum === null && maximum === null) return null;
   const category = /(perhepeuhu|perheliikunta|jumppa|dance|tanssi|liikunta|movement|exercise|temppurata|obstacle|liikettä)/i.test(text) ? 'movement'

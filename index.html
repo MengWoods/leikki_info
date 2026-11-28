@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#2e3439">
-  <meta name="description" content="Family activities for ages 0-8 in Espoo, Helsinki and Vantaa, from today through next week.">
+  <meta name="description" content="Family activities in Espoo, Helsinki and Vantaa, from today through next week.">
   <title>Leikki | Kids’ activities</title>
   <script>
     try { const t = localStorage.getItem('leikki-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch {}
@@ -265,7 +265,7 @@
   <a href="#main" class="skip" data-i18n="skip">Skip to activities</a>
   <header>
     <div class="wrap top">
-      <a class="brand" href="./">Leikki<small data-i18n="brand">ESPOO · HELSINKI · VANTAA · AGES 0-8</small></a>
+      <a class="brand" href="./">Leikki<small data-i18n="brand">ESPOO · HELSINKI · VANTAA</small></a>
       <div class="header-controls">
         <div class="lang">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
@@ -281,7 +281,7 @@
 
   <section class="intro">
     <div class="wrap">
-      <h1 data-i18n="heading">Things to do with little ones</h1>
+      <h1 data-i18n="heading">Things to do with kids</h1>
       <p class="range" id="range" data-i18n="loading">Loading activities...</p>
       <div class="status" id="status" aria-live="polite"></div>
       <div id="warning" class="warning" hidden></div>
@@ -311,7 +311,7 @@
 
   <footer>
     <div class="wrap">
-      <span data-i18n="footer">Families in Espoo, Helsinki and Vantaa, ages 0-8. Updated daily.</span>
+      <span data-i18n="footer">Families in Espoo, Helsinki and Vantaa. Updated daily.</span>
       <span><span data-i18n="attribution">Event data:</span> <a href="https://api.espoo.fi/events/v1/">Espoo</a> / <a href="https://api.hel.fi/linkedevents/v1/">Helmet</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
       <a class="github-link" href="https://github.com/MengWoods/leikki_info">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.65 7.65 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
@@ -329,10 +329,10 @@
   <script type="module">
     const copy = {
       en: {
-        skip:'Skip to activities', brand:'ESPOO · HELSINKI · VANTAA · AGES 0-8', heading:'Things to do with little ones', loading:'Loading activities...', languageLabel:'Language',
+        skip:'Skip to activities', brand:'ESPOO · HELSINKI · VANTAA', heading:'Things to do with kids', loading:'Loading activities...', languageLabel:'Language',
         toDay:'Switch to day mode', toDark:'Switch to dark mode', today:'Today', nextWeek:'Next week', days:'Days',
         filters:'Filters', reset:'Clear',
-        age:"Child's age", anyAge:'Any age', ageUnder1:'Under 1 year', ageYear:'{n} year', ageYears:'{n} years',
+        age:"Child's age", anyAge:'Any age', ageUnder1:'Under 1 year', ageYear:'{n} year', ageYears:'{n} years', age10Plus:'10–15 years',
         city:'City', allCities:'All cities', agesPicked:'Ages {n}', espooCity:'Espoo', helsinkiCity:'Helsinki', vantaaCity:'Vantaa',
         priceLabel:'Price', anyPrice:'Any price', freeOnly:'Free', paidOnly:'Paid', paid:'Paid', admission:'Admission fee', priceUnknown:'Price: check source', tickets:'Tickets & prices',
         indoor:'Indoor', outdoor:'Outdoor',
@@ -353,7 +353,7 @@
         prevDay:'Previous day', nextDay:'Next day', backTop:'Back to top',
         check:'Tap a card to open its original page. Check it before leaving. Unspecified ages and prices are flagged.',
         more:'More places and calendars', directoryNote:'Links only: these are not verified sessions for the dates shown. Check opening hours and prices on each site.',
-        footer:'Families in Espoo, Helsinki and Vantaa, ages 0-8. Updated daily.', attribution:'Event data:', updated:'Last updated',
+        footer:'Families in Espoo, Helsinki and Vantaa. Updated daily.', attribution:'Event data:', updated:'Last updated',
         github:'Issues, requests, and contributions',
         stale:'This snapshot has not been updated recently. Check the original sources.', failed:'Some sources could not be updated. Retained listings are marked outdated.',
         dateWarning:'The saved calendar does not cover all of next week.', error:'The calendar could not be loaded.', retry:'Try again',
@@ -363,10 +363,10 @@
         collected:'Included in automatic event collection', directoryOnly:'Browse its calendar; not collected automatically', mllNote:'Local family cafés and free family exercise; check each local schedule.', playpark:'Commercial indoor playground; entry fee', parksNote:'Free open play at resident parks'
       },
       fi: {
-        skip:'Siirry tapahtumiin', brand:'ESPOO · HELSINKI · VANTAA · 0-8-VUOTIAILLE', heading:'Tekemistä pienten kanssa', loading:'Ladataan tapahtumia...', languageLabel:'Kieli',
+        skip:'Siirry tapahtumiin', brand:'ESPOO · HELSINKI · VANTAA', heading:'Tekemistä lasten kanssa', loading:'Ladataan tapahtumia...', languageLabel:'Kieli',
         toDay:'Vaihda vaaleaan tilaan', toDark:'Vaihda tummaan tilaan', today:'Tänään', nextWeek:'Ensi viikko', days:'Päivät',
         filters:'Suodattimet', reset:'Tyhjennä',
-        age:'Lapsen ikä', anyAge:'Kaikki iät', ageUnder1:'Alle 1 vuotta', ageYear:'{n} vuosi', ageYears:'{n} vuotta',
+        age:'Lapsen ikä', anyAge:'Kaikki iät', ageUnder1:'Alle 1 vuotta', ageYear:'{n} vuosi', ageYears:'{n} vuotta', age10Plus:'10–15 vuotta',
         city:'Kaupunki', allCities:'Kaikki kaupungit', agesPicked:'Ikä {n}', espooCity:'Espoo', helsinkiCity:'Helsinki', vantaaCity:'Vantaa',
         priceLabel:'Hinta', anyPrice:'Kaikki hinnat', freeOnly:'Maksuttomat', paidOnly:'Maksulliset', paid:'Maksullinen', admission:'Pääsymaksu', priceUnknown:'Hinta: tarkista lähde', tickets:'Liput ja hinnat',
         indoor:'Sisällä', outdoor:'Ulkona',
@@ -387,7 +387,7 @@
         prevDay:'Edellinen päivä', nextDay:'Seuraava päivä', backTop:'Takaisin ylös',
         check:'Napauta korttia avataksesi alkuperäisen sivun. Tarkista se ennen lähtöä. Puuttuvat ikä- ja hintatiedot merkitään.',
         more:'Lisää paikkoja ja kalentereita', directoryNote:'Vain linkkejä: nämä eivät ole vahvistettuja tapahtumia näytetyille päiville. Tarkista aukioloajat ja hinnat sivuilta.',
-        footer:'Espoon, Helsingin ja Vantaan perheille, 0-8-vuotiaille. Päivitetään päivittäin.', attribution:'Tapahtumatiedot:', updated:'Päivitetty',
+        footer:'Espoon, Helsingin ja Vantaan perheille. Päivitetään päivittäin.', attribution:'Tapahtumatiedot:', updated:'Päivitetty',
         github:'Ongelmat, ehdotukset ja osallistuminen',
         stale:'Tietoja ei ole päivitetty äskettäin. Tarkista alkuperäiset lähteet.', failed:'Kaikkia lähteitä ei voitu päivittää. Säilytetyt tapahtumat on merkitty vanhentuneiksi.',
         dateWarning:'Tallennettu kalenteri ei kata koko ensi viikkoa.', error:'Kalenteria ei voitu ladata.', retry:'Yritä uudelleen',
@@ -443,7 +443,7 @@
     const saveTimes = () => store.set('leikki-time', JSON.stringify([...times]));
     const saved = { price:store.get('leikki-price'), sort:store.get('leikki-sort') };
     // Multi-select filters (city, age): empty set = all. Older saves stored a single value string.
-    const ageKeys = Array.from({length:9}, (_, n) => String(n));
+    const ageKeys = [...Array.from({length:10}, (_, n) => String(n)), '10+'];
     const loadMulti = (key, keys) => { const raw = store.get(key); try { const v = JSON.parse(raw); if (Array.isArray(v)) return new Set(v.map(String).filter(x => keys.includes(x))); } catch {} return new Set(keys.includes(raw) ? [raw] : []); };
     const multi = {
       city: { keys:cityKeys, set:loadMulti('leikki-city', cityKeys) },
@@ -533,7 +533,7 @@
       document.querySelectorAll('select[data-label]').forEach(select => {
         const btn = select.ddButton; if (!btn) return;
         const picked = [...select.selectedOptions];
-        const value = select.id === 'age' && picked.length > 1 ? t('agesPicked', picked.map(o => o.value === '0' ? '<1' : o.value).join(', ')) : picked.map(o => o.textContent).join(', ');
+        const value = select.id === 'age' && picked.length > 1 ? t('agesPicked', picked.map(o => o.value === '0' ? '<1' : o.value === '10+' ? '10–15' : o.value).join(', ')) : picked.map(o => o.textContent).join(', ');
         btn.innerHTML = (pillIcons[select.id] ? icon(pillIcons[select.id]) : '') + `<span class="val">${escape(value)}</span>`;
         btn.setAttribute('aria-label', `${t(select.dataset.label)}: ${value}`);
         btn.title = btn.getAttribute('aria-label');
@@ -546,8 +546,10 @@
       const keep = id => get(id).value;
       const price = keep('price') || saved.price || 'all'
         , sort = keep('sort') || saved.sort;
-      get('age').innerHTML = `<option value="all">${escape(t('anyAge'))}</option>` + Array.from({length:9}, (_, n) =>
-        `<option value="${n}">${escape(n === 0 ? t('ageUnder1') : t(n === 1 ? 'ageYear' : 'ageYears', n))}</option>`).join('');
+      get('age').innerHTML = `<option value="all">${escape(t('anyAge'))}</option>` + ageKeys.map(key => {
+        const label = key === '10+' ? t('age10Plus') : key === '0' ? t('ageUnder1') : t(key === '1' ? 'ageYear' : 'ageYears', key);
+        return `<option value="${key}">${escape(label)}</option>`;
+      }).join('');
       get('city').innerHTML = `<option value="all">${escape(t('allCities'))}</option>` + cityKeys.map(c => `<option value="${c}">${escape(t(c + 'City'))}</option>`).join('');
       get('price').innerHTML = [['all','anyPrice'],['free','freeOnly'],['paid','paidOnly']].map(([v,k]) => `<option value="${v}">${escape(t(k))}</option>`).join('');
       syncMultiSelect('city'); syncMultiSelect('age');
@@ -674,7 +676,9 @@
         && (price === 'all' || (a.price?.status ?? 'free') === price)
         && (ignoreCategory || category === 'all' || a.category === category)
         && (ignoreTime || times.size === 0 || times.has(slotOf(a)))
-        && (ages.size === 0 || [...ages].some(n => (a.ages.min === null || a.ages.min <= +n) && (a.ages.max === null || a.ages.max >= +n)));
+        && (ages.size === 0 || [...ages].some(key => key === '10+'
+          ? (a.ages.min === null || a.ages.min < 16) && (a.ages.max === null || a.ages.max >= 10)
+          : (a.ages.min === null || a.ages.min <= +key) && (a.ages.max === null || a.ages.max >= +key)));
     }
     const activeFilterCount = () => (get('price').value !== 'all') + (cities.size > 0) + (ages.size > 0) + (category !== 'all') + (times.size > 0);
     function resetFilters() {
