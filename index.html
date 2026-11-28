@@ -164,9 +164,13 @@
     .orig-note { font-size:11px; color:var(--muted); display:block; margin:-4px 0 6px; }
     .venue { margin:0; font-weight:600; font-size:13px; }
     .address { font-size:12px; color:var(--muted); margin:2px 0 0; overflow-wrap:anywhere; }
-    .copy-address { display:inline-flex; align-items:center; gap:4px; min-height:24px; max-width:100%; margin-inline-start:4px; padding:2px 7px; border:1px solid var(--line); border-radius:999px; background:var(--field); color:var(--muted); font:inherit; font-size:11px; font-weight:600; line-height:1.2; vertical-align:middle; }
-    .copy-address svg { flex:none; width:12px; height:12px; }
-    .copy-address:hover, .copy-address:focus-visible { background:var(--raised); color:var(--ink); }
+    :is(.copy-address,.add-calendar) { display:inline-flex; align-items:center; gap:4px; min-height:24px; max-width:100%; padding:2px 7px; border:1px solid var(--line); border-radius:999px; background:var(--field); color:var(--muted); font:inherit; font-size:11px; font-weight:600; line-height:1.2; vertical-align:middle; }
+    :is(.copy-address,.add-calendar) svg { flex:none; width:12px; height:12px; }
+    :is(.copy-address,.add-calendar):is(:hover,:focus-visible) { background:var(--raised); color:var(--ink); }
+    .copy-address { margin-inline-start:4px; }
+    .card-title { display:flex; align-items:baseline; gap:8px; }
+    .card-title h3 { min-width:0; }
+    .add-calendar { flex:none; min-width:28px; justify-content:center; }
     .tags { display:flex; flex-wrap:wrap; gap:5px; margin:12px 0; }
     .tag { font-size:11px; border:1px solid var(--line); padding:2px 8px; border-radius:999px; color:var(--muted); }
     .tag.free { background:var(--tint); color:var(--green); border-color:var(--green); font-weight:700; }
@@ -181,10 +185,6 @@
     details p { white-space:pre-line; overflow-wrap:anywhere; max-height:230px; overflow:auto; margin:8px 0; }
     details ul { padding-left:18px; margin:8px 0; }
     .card-footer { display:flex; justify-content:flex-end; align-items:center; flex-wrap:wrap; gap:10px; border-top:1px solid var(--line); margin-top:14px; padding-top:12px; font-size:13px; }
-    .calendar-menu { margin-inline-end:auto; color:var(--green); font-size:14px; }
-    .calendar-menu summary { display:list-item; line-height:24px; }
-    .calendar-options { display:flex; flex-wrap:wrap; gap:4px 12px; margin-top:4px; }
-    .calendar-options a { display:inline-flex; align-items:center; min-height:44px; }
     .empty { color:var(--muted); padding:28px 0; margin:0; font-size:14px; text-align:center; }
     .empty button { display:block; margin:12px auto 0; }
     .pager { display:flex; justify-content:space-between; gap:10px; margin-top:24px; }
@@ -341,7 +341,7 @@
         morningHours:'Starts before 12:00', afternoonHours:'Starts 12:00–17:00', eveningHours:'Starts 17:00 or later',
         ages:'Ages', allAge:'All ages', unspecifiedAge:'Age not given', outdated:'Outdated', photo:'Photo', finnishText:'Original title',
         moreInfo:'Event details', language:'Event language', notGiven:'Not specified',
-        addToCalendar:'Add to calendar', calendarFile:'Apple Calendar / .ics',
+        addToCalendar:'Add to calendar',
         rating:'Recommendation', starsOf:'{n} out of 5 stars', whyRating:'Why this rating?',
         ratingNote:'A rule-based suggestion, not a review or guarantee. Points out of 100 become stars (20 points = 1 star). Play and movement weigh most; missing details earn nothing.',
         freeSource:'Free of charge', pricedOffer:'Price stated up front', knownAge:'Age guidance provided', duration:'30-120 minute session', dropIn:'No advance registration needed', knownVenue:'Named venue',
@@ -375,7 +375,7 @@
         morningHours:'Alkaa ennen klo 12', afternoonHours:'Alkaa klo 12–17', eveningHours:'Alkaa klo 17 tai myöhemmin',
         ages:'Ikä', allAge:'Ei ikärajaa', unspecifiedAge:'Ikää ei ilmoitettu', outdated:'Vanhentunut', photo:'Kuva', finnishText:'Alkuperäinen nimi',
         moreInfo:'Tapahtuman tiedot', language:'Tapahtuman kieli', notGiven:'Ei ilmoitettu',
-        addToCalendar:'Lisää kalenteriin', calendarFile:'Apple-kalenteri / .ics',
+        addToCalendar:'Lisää kalenteriin',
         rating:'Suositus', starsOf:'{n} / 5 tähteä', whyRating:'Mistä arvio tulee?',
         ratingNote:'Sääntöpohjainen ehdotus, ei asiakasarvio tai takuu. 100 pisteestä lasketaan tähdet (20 pistettä = 1 tähti). Leikki ja liikkuminen painottuvat; puuttuvista tiedoista ei saa pisteitä.',
         freeSource:'Maksuton', pricedOffer:'Hinta ilmoitettu etukäteen', knownAge:'Ikätiedot ilmoitettu', duration:'30-120 minuutin tapahtuma', dropIn:'Ennakkoilmoittautumista ei tarvita', knownVenue:'Tapahtumapaikka ilmoitettu',
@@ -584,16 +584,17 @@
     const calendarTime = date => new Date(date).toISOString().replace(/[-:]|\.\d{3}/g, '');
     const calendarText = value => value.replace(/\\/g, '\\\\').replace(/\r\n|\r|\n/g, '\\n').replace(/[,;]/g, '\\$&');
 
-    function calendarMenu(activity, location) {
+    const preferGoogleCalendar = /Android|CrOS/i.test(navigator.userAgent);
+    const calendarLocation = activity => [text(activity.venue), text(activity.address).trim()].filter(Boolean).join(', ');
+
+    function googleCalendarUrl(activity) {
       const title = text(activity.title);
       const start = calendarTime(activity.start);
       const end = activity.end && Date.parse(activity.end) > Date.parse(activity.start) ? calendarTime(activity.end) : '';
       const params = new URLSearchParams({
-        action:'TEMPLATE', text:title, dates:`${start}/${end || start}`, location, ctz:'Europe/Helsinki'
+        action:'TEMPLATE', text:title, dates:`${start}/${end || start}`, location:calendarLocation(activity), ctz:'Europe/Helsinki'
       });
-      return `<details class="calendar-menu"><summary class="btn">${escape(t('addToCalendar'))}</summary>
-        <div class="calendar-options">${link(`https://calendar.google.com/calendar/render?${params}`, 'Google Calendar')}
-        <a href="#" data-calendar-event="${escape(activity.id)}">${escape(t('calendarFile'))}</a></div></details>`;
+      return `https://calendar.google.com/calendar/render?${params}`;
     }
 
     function calendarFile(activity) {
@@ -603,7 +604,7 @@
         `UID:${calendarText(activity.id)}-${start}@leikki.info`,
         `DTSTAMP:${calendarTime(data.generatedAt)}`, `DTSTART:${start}`,
         `SUMMARY:${calendarText(text(activity.title))}`,
-        `LOCATION:${calendarText([text(activity.venue), text(activity.address)].filter(Boolean).join(', '))}`
+        `LOCATION:${calendarText(calendarLocation(activity))}`
       ];
       if (activity.end && Date.parse(activity.end) > Date.parse(activity.start)) lines.push(`DTEND:${calendarTime(activity.end)}`);
       lines.push('END:VEVENT', 'END:VCALENDAR', '');
@@ -644,12 +645,12 @@
       const extra = a.registrationUrl ? link(a.registrationUrl, t('register')) : pr.url ? link(pr.url, t('tickets')) : '';
       return `<article class="card ${pr.status === 'free' ? 'free' : pr.status === 'paid' ? 'paid' : ''}${isSaved ? ' saved' : ''}${isDisliked ? ' disliked' : ''}"${url ? ` data-url="${escape(url)}"` : ''}>${photo}<div class="card-body">
         <div class="card-top"><span class="time">${escape(hm(a.start))}${sameDayEnd ? ` – ${escape(hm(a.end))}` : ''}${duration ? `<small>${escape(duration)}</small>` : ''}</span><span class="card-actions">${stars(a.score.value)}<button type="button" class="dislike" data-dislike="${escape(a.id)}" aria-pressed="${isDisliked}" aria-label="${escape(t(isDisliked ? 'undislike' : 'dislike'))}" title="${escape(t(isDisliked ? 'undislike' : 'dislike'))}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M17 14V3H7.5a2 2 0 0 0-2 1.6l-1.4 7A2 2 0 0 0 6 14h4.5l-1 4.4A2 2 0 0 0 11.4 21L17 14z"/><path d="M17 3h3v11h-3"/></svg></button><button type="button" class="save" data-save="${escape(a.id)}" aria-pressed="${isSaved}" aria-label="${escape(t(isSaved ? 'unsave' : 'save'))}" title="${escape(t(isSaved ? 'unsave' : 'save'))}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg></button></span></div>
-        <h3 lang="${titleLang}">${url ? link(url, text(a.title)) : escape(text(a.title))}</h3>${language !== titleLang ? `<small class="orig-note">${escape(t('finnishText'))}</small>` : ''}
+        <div class="card-title"><h3 lang="${titleLang}">${url ? link(url, text(a.title)) : escape(text(a.title))}</h3><button type="button" class="add-calendar" data-calendar-event="${escape(a.id)}" aria-label="${escape(t('addToCalendar'))}" title="${escape(t('addToCalendar'))}">${icon('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18m-9 3v5m-2.5-2.5h5"/>')}</button></div>${language !== titleLang ? `<small class="orig-note">${escape(t('finnishText'))}</small>` : ''}
         <p class="venue">${escape(text(a.venue))}</p>${address ? `<p class="address">${escape(address)} <button type="button" class="copy-address" data-copy-address="${escape(address)}"><span aria-live="polite">${escape(t('copyAddress'))}</span>${icon('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>')}</button></p>` : ''}
         <div class="tags">${priceTag}<span class="tag city">${escape(t(a.city + 'City'))}</span><span class="tag">${escape(t(a.category))}</span><span class="tag${a.ages.confirmed ? '' : ' caution'}">${escape(ageLabel(a.ages))}</span>${a.environment !== 'unknown' ? `<span class="tag">${escape(t(a.environment))}</span>` : ''}${a.stale ? `<span class="tag caution">${escape(t('outdated'))}</span>` : ''}</div>
         <details><summary>${escape(t('moreInfo'))}</summary>${description ? `<p lang="${descLang}">${escape(description)}</p>` : ''}<p>${escape(t('language'))}: ${escape(a.languages.length ? a.languages.join(', ').toUpperCase() : t('notGiven'))}${pr.status === 'paid' && priceText ? `<br>${escape(t('priceLabel'))}: ${escape(priceText)}` : ''}</p></details>
         <details><summary>${escape(t('whyRating'))}</summary><ul>${a.score.reasons.map(r => `<li>+${r.points}: ${escape(t(r.key))}</li>`).join('')}</ul><p>${escape(t('ratingNote'))}</p></details>
-        <div class="card-footer">${calendarMenu(a, [text(a.venue), address].filter(Boolean).join(', '))}${extra}</div>
+        ${extra ? `<div class="card-footer">${extra}</div>` : ''}
       </div></article>`;
     }
 
@@ -825,11 +826,14 @@
     });
     const copyFeedbackTimers = new WeakMap();
     get('results').addEventListener('click', async e => {
-      const calendarLink = e.target.closest('[data-calendar-event]');
-      if (calendarLink) {
-        e.preventDefault();
-        const activity = data.activities.find(a => a.id === calendarLink.dataset.calendarEvent);
+      const calendarButton = e.target.closest('[data-calendar-event]');
+      if (calendarButton) {
+        const activity = data.activities.find(a => a.id === calendarButton.dataset.calendarEvent);
         if (!activity) return;
+        if (preferGoogleCalendar) {
+          window.open(googleCalendarUrl(activity), '_blank', 'noopener,noreferrer');
+          return;
+        }
         const url = URL.createObjectURL(calendarFile(activity));
         const download = document.createElement('a');
         download.href = url;
