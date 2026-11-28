@@ -144,10 +144,10 @@
     .dislike[aria-pressed="true"] svg { fill:currentColor; }
     .card.disliked { opacity:.6; }
     .card.disliked:hover { opacity:1; }
-    .disliked-section { margin-top:24px; border-top:1px solid var(--line); padding-top:6px; }
-    .disliked-section > summary { cursor:pointer; padding:10px 0; font-size:14px; font-weight:600; color:var(--muted); }
-    .disliked-section > summary:hover { color:var(--ink); }
-    .disliked-section .cards { margin-top:6px; }
+    :is(.disliked-section, .finished-section) { margin-top:24px; border-top:1px solid var(--line); padding-top:6px; }
+    :is(.disliked-section, .finished-section) > summary { cursor:pointer; padding:10px 0; font-size:14px; font-weight:600; color:var(--muted); }
+    :is(.disliked-section, .finished-section) > summary:hover { color:var(--ink); }
+    :is(.disliked-section, .finished-section) .cards { margin-top:6px; }
     .save { width:36px; height:36px; margin:-6px -8px -6px 0; display:grid; place-items:center; border:0; border-radius:999px; background:transparent; color:var(--muted); padding:0; }
     .save:hover { background:var(--raised); color:var(--ink); }
     .save[aria-pressed="true"] { color:var(--star); }
@@ -331,7 +331,7 @@
         activityType:'Activity type', allActivities:'All activities', movement:'Move & dance', play:'Play & meet', creative:'Make & explore', quiet:'Quiet moments',
         activities:'activities', activity:'activity', free:'Free', register:'Registration', save:'Save', unsave:'Remove from saved',
         copyAddress:'Copy', addressCopied:'Copied', addressCopyFailed:'Could not copy address',
-        dislike:'Not interested', undislike:'Undo not interested', dislikedSection:'Not interested ({n})',
+        dislike:'Not interested', undislike:'Undo not interested', dislikedSection:'Not interested ({n})', finishedSection:'Finished today ({n})', noUpcoming:'No upcoming or ongoing activities today.',
         timeOfDay:'Time of day', morning:'Morning', afternoon:'Afternoon', evening:'Evening',
         morningHours:'Starts before 12:00', afternoonHours:'Starts 12:00–17:00', eveningHours:'Starts 17:00 or later',
         ages:'Ages', allAge:'All ages', unspecifiedAge:'Age not given', outdated:'Outdated', photo:'Photo', finnishText:'Original title',
@@ -364,7 +364,7 @@
         activityType:'Tekemisen tyyppi', allActivities:'Kaikki tekeminen', movement:'Liiku ja tanssi', play:'Leiki ja tapaa', creative:'Luo ja tutki', quiet:'Rauhalliset hetket',
         activities:'tapahtumaa', activity:'tapahtuma', free:'Maksuton', register:'Ilmoittautuminen', save:'Tallenna', unsave:'Poista tallennetuista',
         copyAddress:'Kopioi', addressCopied:'Kopioitu', addressCopyFailed:'Osoitteen kopiointi epäonnistui',
-        dislike:'Ei kiinnosta', undislike:'Peru ei kiinnosta', dislikedSection:'Ei kiinnosta ({n})',
+        dislike:'Ei kiinnosta', undislike:'Peru ei kiinnosta', dislikedSection:'Ei kiinnosta ({n})', finishedSection:'Tänään päättyneet ({n})', noUpcoming:'Tänään ei ole enää käynnissä olevia tai tulevia tapahtumia.',
         timeOfDay:'Kellonaika', morning:'Aamupäivä', afternoon:'Iltapäivä', evening:'Ilta',
         morningHours:'Alkaa ennen klo 12', afternoonHours:'Alkaa klo 12–17', eveningHours:'Alkaa klo 17 tai myöhemmin',
         ages:'Ikä', allAge:'Ei ikärajaa', unspecifiedAge:'Ikää ei ilmoitettu', outdated:'Vanhentunut', photo:'Kuva', finnishText:'Alkuperäinen nimi',
@@ -624,7 +624,7 @@
     }
 
     /* ---------- Render ---------- */
-    let visibleDays = [], dislikedOpen = false;
+    let visibleDays = [], dislikedOpen = false, finishedOpen = false, endTimer;
     function render() { renderView(); syncDropdowns(); }
     function renderView() {
       if (!data) {
@@ -647,8 +647,22 @@
       ].filter(Boolean);
       get('warning').hidden = !warnings.length; get('warning').textContent = warnings.join(' ');
 
-      const upcoming = data.activities.filter(a => visibleDays.includes(a.date)
-        && (a.date !== todayISO || (Date.parse(a.end) || Date.parse(a.start)) > now.getTime()));
+      const upcoming = [], finished = [];
+      let nextEnd = Infinity;
+      for (const activity of data.activities) {
+        if (!visibleDays.includes(activity.date)) continue;
+        if (activity.date === todayISO) {
+          const end = Date.parse(activity.end);
+          if (end <= now.getTime()) {
+            finished.push(activity);
+            continue;
+          }
+          if (Number.isFinite(end)) nextEnd = Math.min(nextEnd, end);
+        }
+        upcoming.push(activity);
+      }
+      clearTimeout(endTimer);
+      if (Number.isFinite(nextEnd)) endTimer = setTimeout(render, Math.min(nextEnd - Date.now(), 2147483647));
       const filtered = upcoming.filter(a => matchesFilters(a));
 
       // Day tabs
@@ -689,13 +703,19 @@
       const all = filtered.filter(a => a.date === selectedDate)
         .sort((x, y) => (bookmarks.has(y.id) - bookmarks.has(x.id)) || (get('sort').value === 'score' ? y.score.value - x.score.value : 0) || x.start.localeCompare(y.start));
       const day = all.filter(a => !dislikes.has(a.id)), hidden = all.filter(a => dislikes.has(a.id));
+      const finishedToday = selectedDate === todayISO ? finished.filter(a => matchesFilters(a)) : [];
+      const finishedDay = finishedToday.filter(a => !dislikes.has(a.id))
+        .sort((x, y) => Date.parse(y.end) - Date.parse(x.end));
+      const dislikedDay = hidden.concat(finishedToday.filter(a => dislikes.has(a.id)));
       const anyThatDay = selectedActivities.length > 0;
+      const emptyMessage = anyThatDay ? 'noResults' : selectedDate === todayISO && finished.length ? 'noUpcoming' : 'noEvents';
       const idx = visibleDays.indexOf(selectedDate);
       const prev = visibleDays[idx - 1], next = visibleDays[idx + 1];
       get('results').innerHTML = `<div class="day-heading"><h2>${escape(format(noon(selectedDate),{weekday:'long',day:'numeric',month:'long'}))}</h2><span class="meta">${day.length} ${escape(t(day.length === 1 ? 'activity' : 'activities'))}</span></div>`
         + (day.length ? `<div class="cards">${day.map(card).join('')}</div>`
-          : `<div class="empty"><p>${escape(t(anyThatDay ? 'noResults' : 'noEvents'))}</p>${anyThatDay && n ? `<button type="button" class="btn" data-reset>${escape(t('reset'))}</button>` : ''}</div>`)
-        + (hidden.length ? `<details class="disliked-section"${dislikedOpen ? ' open' : ''}><summary>${escape(t('dislikedSection', hidden.length))}</summary><div class="cards">${hidden.map(card).join('')}</div></details>` : '')
+          : `<div class="empty"><p>${escape(t(emptyMessage))}</p>${anyThatDay && n ? `<button type="button" class="btn" data-reset>${escape(t('reset'))}</button>` : ''}</div>`)
+        + (dislikedDay.length ? `<details class="disliked-section"${dislikedOpen ? ' open' : ''}><summary>${escape(t('dislikedSection', dislikedDay.length))}</summary><div class="cards">${dislikedDay.map(card).join('')}</div></details>` : '')
+        + (finishedDay.length ? `<details class="finished-section"${finishedOpen ? ' open' : ''}><summary>${escape(t('finishedSection', finishedDay.length))}</summary><div class="cards">${finishedDay.map(card).join('')}</div></details>` : '')
         + `<nav class="pager" aria-label="${escape(t('days'))}">${prev ? `<button type="button" class="btn" data-go="${prev}">← ${escape(format(noon(prev),{weekday:'short',day:'numeric',month:'numeric'}))}</button>` : '<span></span>'}${next ? `<button type="button" class="btn" data-go="${next}">${escape(format(noon(next),{weekday:'short',day:'numeric',month:'numeric'}))} →</button>` : ''}</nav>`;
       document.querySelectorAll('.photo').forEach(img => img.addEventListener('error', () => { img.nextElementSibling?.remove(); img.remove(); }, { once:true }));
     }
@@ -784,10 +804,13 @@
         return [...get('results').querySelectorAll('[data-save]')].find(b => b.dataset.save === id)?.focus({ preventScroll:true });
       }
       const c = e.target.closest('.card[data-url]');
-      if (!c || e.target.closest('a,button,details,input,select') || String(getSelection?.() ?? '')) return;
+      if (!c || (e.target.closest('a,button,input,select') || c.contains(e.target.closest('details'))) || String(getSelection?.() ?? '')) return;
       window.open(c.dataset.url, '_blank', 'noopener,noreferrer');
     });
-    get('results').addEventListener('toggle', e => { if (e.target.matches('.disliked-section')) dislikedOpen = e.target.open; }, true);
+    get('results').addEventListener('toggle', e => {
+      if (e.target.matches('.disliked-section')) dislikedOpen = e.target.open;
+      if (e.target.matches('.finished-section')) finishedOpen = e.target.open;
+    }, true);
     const backTop = get('back-top');
     backTop.addEventListener('click', () => window.scrollTo({ top:0 }));
     const onScroll = () => {
