@@ -426,7 +426,7 @@
       evening: icon('<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>')
     };
     const saveTimes = () => store.set('leikki-time', JSON.stringify([...times]));
-    const saved = { price:store.get('leikki-price') };
+    const saved = { price:store.get('leikki-price'), sort:store.get('leikki-sort') };
     // Multi-select filters (city, age): empty set = all. Older saves stored a single value string.
     const ageKeys = Array.from({length:9}, (_, n) => String(n));
     const loadMulti = (key, keys) => { const raw = store.get(key); try { const v = JSON.parse(raw); if (Array.isArray(v)) return new Set(v.map(String).filter(x => keys.includes(x))); } catch {} return new Set(keys.includes(raw) ? [raw] : []); };
@@ -530,7 +530,7 @@
     function buildControls() {
       const keep = id => get(id).value;
       const price = keep('price') || saved.price || 'all'
-        , sort = keep('sort') || 'score';
+        , sort = keep('sort') || saved.sort;
       get('age').innerHTML = `<option value="all">${escape(t('anyAge'))}</option>` + Array.from({length:9}, (_, n) =>
         `<option value="${n}">${escape(n === 0 ? t('ageUnder1') : t(n === 1 ? 'ageYear' : 'ageYears', n))}</option>`).join('');
       get('city').innerHTML = `<option value="all">${escape(t('allCities'))}</option>` + cityKeys.map(c => `<option value="${c}">${escape(t(c + 'City'))}</option>`).join('');
@@ -538,7 +538,7 @@
       syncMultiSelect('city'); syncMultiSelect('age');
       get('price').value = ['free','paid'].includes(price) ? price : 'all';
       get('sort').innerHTML = `<option value="score">${escape(t('bestFirst'))}</option><option value="time">${escape(t('timeFirst'))}</option>`;
-      get('sort').value = sort;
+      get('sort').value = sort === 'time' ? 'time' : 'score';
       get('days').setAttribute('aria-label', t('days'));
       document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
       document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
@@ -642,7 +642,9 @@
       ].filter(Boolean);
       get('warning').hidden = !warnings.length; get('warning').textContent = warnings.join(' ');
 
-      const filtered = data.activities.filter(a => visibleDays.includes(a.date) && matchesFilters(a));
+      const upcoming = data.activities.filter(a => visibleDays.includes(a.date)
+        && (a.date !== todayISO || (Date.parse(a.end) || Date.parse(a.start)) > now.getTime()));
+      const filtered = upcoming.filter(a => matchesFilters(a));
 
       // Day tabs
       get('days').innerHTML = visibleDays.map(date => {
@@ -657,9 +659,10 @@
       if (tab) { const strip = get('days'); const left = tab.offsetLeft, right = left + tab.offsetWidth; if (left < strip.scrollLeft || right > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = left - (strip.clientWidth - tab.offsetWidth) / 2; }
 
       // Activity-type options with counts for the selected day
-      const dayAll = data.activities.filter(a => a.date === selectedDate && !dislikes.has(a.id) && matchesFilters(a, { ignoreCategory:true }));
+      const selectedActivities = upcoming.filter(a => a.date === selectedDate);
+      const dayAll = selectedActivities.filter(a => !dislikes.has(a.id) && matchesFilters(a, { ignoreCategory:true }));
       // Time-of-day chips with counts for the selected day
-      const dayAnyTime = data.activities.filter(a => a.date === selectedDate && !dislikes.has(a.id) && matchesFilters(a, { ignoreTime:true }));
+      const dayAnyTime = selectedActivities.filter(a => !dislikes.has(a.id) && matchesFilters(a, { ignoreTime:true }));
       get('times').setAttribute('aria-label', t('timeOfDay'));
       get('times').innerHTML = slots.map(s => {
         const count = dayAnyTime.filter(a => slotOf(a) === s).length;
@@ -681,7 +684,7 @@
       const all = filtered.filter(a => a.date === selectedDate)
         .sort((x, y) => (bookmarks.has(y.id) - bookmarks.has(x.id)) || (get('sort').value === 'score' ? y.score.value - x.score.value : 0) || x.start.localeCompare(y.start));
       const day = all.filter(a => !dislikes.has(a.id)), hidden = all.filter(a => dislikes.has(a.id));
-      const anyThatDay = data.activities.some(a => a.date === selectedDate);
+      const anyThatDay = selectedActivities.length > 0;
       const idx = visibleDays.indexOf(selectedDate);
       const prev = visibleDays[idx - 1], next = visibleDays[idx + 1];
       get('results').innerHTML = `<div class="day-heading"><h2>${escape(format(noon(selectedDate),{weekday:'long',day:'numeric',month:'long'}))}</h2><span class="meta">${day.length} ${escape(t(day.length === 1 ? 'activity' : 'activities'))}</span></div>`
@@ -713,9 +716,6 @@
         const payload = await response.json();
         if (payload.schemaVersion !== 3 || payload.week?.days?.length < 8 || payload.week.days.length > 14 || !Array.isArray(payload.activities)) throw new Error('Invalid snapshot');
         data = payload;
-        const ids = new Set(payload.activities.map(a => a.id));
-        bookmarks.forEach(id => { if (!ids.has(id)) bookmarks.delete(id); }); saveBookmarks();
-        dislikes.forEach(id => { if (!ids.has(id)) dislikes.delete(id); }); saveDislikes();
         const hash = location.hash.slice(1);
         if (/^\d{4}-\d{2}-\d{2}$/.test(hash)) selectedDate = hash;
       } catch { loadFailed = true; }
@@ -725,7 +725,8 @@
     /* ---------- Events ---------- */
     get('language').addEventListener('change', e => { language = e.target.value; store.set('leikki-language', language); buildControls(); render(); });
     get('theme').addEventListener('click', () => { theme = theme === 'dark' ? 'light' : 'dark'; store.set('leikki-theme', theme); applyTheme(); });
-    get('sort').addEventListener('change', render);
+    get('sort').addEventListener('change', e => { store.set('leikki-sort', e.target.value); render(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && data) render(); });
     get('category').addEventListener('change', e => { category = e.target.value; render(); });
     get('reset').addEventListener('click', resetFilters);
     get('times').addEventListener('click', e => {
