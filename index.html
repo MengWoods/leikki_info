@@ -164,7 +164,7 @@
     .orig-note { font-size:11px; color:var(--muted); display:block; margin:-4px 0 6px; }
     .venue { margin:0; font-weight:600; font-size:13px; }
     .address { font-size:12px; color:var(--muted); margin:2px 0 0; overflow-wrap:anywhere; }
-    .copy-address { min-height:44px; margin-top:2px; padding:0 8px; border:0; border-radius:8px; background:transparent; color:var(--ink); font:inherit; font-size:12px; text-decoration:underline; }
+    .copy-address { min-height:44px; max-width:100%; margin-inline-start:6px; padding:4px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); font:inherit; font-weight:600; vertical-align:middle; }
     .copy-address:hover, .copy-address:focus-visible { background:var(--raised); }
     .tags { display:flex; flex-wrap:wrap; gap:5px; margin:12px 0; }
     .tag { font-size:11px; border:1px solid var(--line); padding:2px 8px; border-radius:999px; color:var(--muted); }
@@ -330,7 +330,7 @@
         sort:'Order', bestFirst:'Recommended', timeFirst:'By time',
         activityType:'Activity type', allActivities:'All activities', movement:'Move & dance', play:'Play & meet', creative:'Make & explore', quiet:'Quiet moments',
         activities:'activities', activity:'activity', free:'Free', register:'Registration', save:'Save', unsave:'Remove from saved',
-        copyAddress:'Copy address', addressCopied:'Copied', addressCopyFailed:'Could not copy address',
+        copyAddress:'Copy', addressCopied:'Copied', addressCopyFailed:'Could not copy address',
         dislike:'Not interested', undislike:'Undo not interested', dislikedSection:'Not interested ({n})',
         timeOfDay:'Time of day', morning:'Morning', afternoon:'Afternoon', evening:'Evening',
         morningHours:'Starts before 12:00', afternoonHours:'Starts 12:00–17:00', eveningHours:'Starts 17:00 or later',
@@ -363,7 +363,7 @@
         sort:'Järjestys', bestFirst:'Suositellut', timeFirst:'Aikajärjestys',
         activityType:'Tekemisen tyyppi', allActivities:'Kaikki tekeminen', movement:'Liiku ja tanssi', play:'Leiki ja tapaa', creative:'Luo ja tutki', quiet:'Rauhalliset hetket',
         activities:'tapahtumaa', activity:'tapahtuma', free:'Maksuton', register:'Ilmoittautuminen', save:'Tallenna', unsave:'Poista tallennetuista',
-        copyAddress:'Kopioi osoite', addressCopied:'Kopioitu', addressCopyFailed:'Osoitteen kopiointi epäonnistui',
+        copyAddress:'Kopioi', addressCopied:'Kopioitu', addressCopyFailed:'Osoitteen kopiointi epäonnistui',
         dislike:'Ei kiinnosta', undislike:'Peru ei kiinnosta', dislikedSection:'Ei kiinnosta ({n})',
         timeOfDay:'Kellonaika', morning:'Aamupäivä', afternoon:'Iltapäivä', evening:'Ilta',
         morningHours:'Alkaa ennen klo 12', afternoonHours:'Alkaa klo 12–17', eveningHours:'Alkaa klo 17 tai myöhemmin',
@@ -595,7 +595,7 @@
       return `<article class="card ${pr.status === 'free' ? 'free' : pr.status === 'paid' ? 'paid' : ''}${isSaved ? ' saved' : ''}${isDisliked ? ' disliked' : ''}"${url ? ` data-url="${escape(url)}"` : ''}>${photo}<div class="card-body">
         <div class="card-top"><span class="time">${escape(hm(a.start))}${sameDayEnd ? ` – ${escape(hm(a.end))}` : ''}${duration ? `<small>${escape(duration)}</small>` : ''}</span><span class="card-actions">${stars(a.score.value)}<button type="button" class="dislike" data-dislike="${escape(a.id)}" aria-pressed="${isDisliked}" aria-label="${escape(t(isDisliked ? 'undislike' : 'dislike'))}" title="${escape(t(isDisliked ? 'undislike' : 'dislike'))}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M17 14V3H7.5a2 2 0 0 0-2 1.6l-1.4 7A2 2 0 0 0 6 14h4.5l-1 4.4A2 2 0 0 0 11.4 21L17 14z"/><path d="M17 3h3v11h-3"/></svg></button><button type="button" class="save" data-save="${escape(a.id)}" aria-pressed="${isSaved}" aria-label="${escape(t(isSaved ? 'unsave' : 'save'))}" title="${escape(t(isSaved ? 'unsave' : 'save'))}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg></button></span></div>
         <h3 lang="${titleLang}">${url ? link(url, text(a.title)) : escape(text(a.title))}</h3>${language !== titleLang ? `<small class="orig-note">${escape(t('finnishText'))}</small>` : ''}
-        <p class="venue">${escape(text(a.venue))}</p>${address ? `<p class="address">${escape(address)}</p><button type="button" class="copy-address" data-copy-address="${escape(address)}"><span aria-live="polite">${escape(t('copyAddress'))}</span></button>` : ''}
+        <p class="venue">${escape(text(a.venue))}</p>${address ? `<p class="address">${escape(address)} <button type="button" class="copy-address" data-copy-address="${escape(address)}"><span aria-live="polite">${escape(t('copyAddress'))}</span></button></p>` : ''}
         <div class="tags">${priceTag}<span class="tag city">${escape(t(a.city + 'City'))}</span><span class="tag">${escape(t(a.category))}</span><span class="tag${a.ages.confirmed ? '' : ' caution'}">${escape(ageLabel(a.ages))}</span>${a.environment !== 'unknown' ? `<span class="tag">${escape(t(a.environment))}</span>` : ''}${a.stale ? `<span class="tag caution">${escape(t('outdated'))}</span>` : ''}</div>
         <details><summary>${escape(t('moreInfo'))}</summary>${description ? `<p lang="${descLang}">${escape(description)}</p>` : ''}<p>${escape(t('language'))}: ${escape(a.languages.length ? a.languages.join(', ').toUpperCase() : t('notGiven'))}${pr.status === 'paid' && priceText ? `<br>${escape(t('priceLabel'))}: ${escape(priceText)}` : ''}</p></details>
         <details><summary>${escape(t('whyRating'))}</summary><ul>${a.score.reasons.map(r => `<li>+${r.points}: ${escape(t(r.key))}</li>`).join('')}</ul><p>${escape(t('ratingNote'))}</p></details>
